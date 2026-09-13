@@ -1,23 +1,41 @@
 import { CATEGORIES, CATEGORIES_BY_ORDER, findCategoryBySlug, getCategoryById } from "./categories";
+import { CATALOG_USE_DEMO_DB, DEMO_DB_CATEGORY_ID } from "./demo-db";
 import { PRODUCTS } from "./products";
+import { listProductsByCategory, resolveProduct } from "./repository";
 import type { Category, CategoryId, Product, SaleUnit } from "./types";
 
 export { CATEGORIES, CATEGORIES_BY_ORDER, findCategoryBySlug, getCategoryById };
-export { PRODUCTS };
+export { PRODUCTS, CATALOG_USE_DEMO_DB, DEMO_DB_CATEGORY_ID };
+export { listProductsByCategory, resolveProduct };
 export type { Category, CategoryId, Product, SaleUnit };
 
-const PRODUCT_BY_SLUG = new Map<string, Product>(PRODUCTS.map((item) => [item.slug, item]));
-
 export function findProductBySlug(slug: string): Product | undefined {
-  return PRODUCT_BY_SLUG.get(slug);
+  return resolveProduct(slug);
 }
 
 export function getProductsByCategory(categoryId: CategoryId): Product[] {
-  return PRODUCTS.filter((product) => product.categoryId === categoryId);
+  return listProductsByCategory(categoryId);
 }
 
 export function countProductsByCategory(categoryId: CategoryId): number {
   return getProductsByCategory(categoryId).length;
+}
+
+export function productImage(product: Product): string {
+  if (product.image) return product.image;
+  return getCategoryById(product.categoryId).image;
+}
+
+export function productCardTitle(product: Product): string {
+  return product.cardTitle ?? product.name;
+}
+
+/** Цена и единица для плитки каталога (приоритет — цена за метр). */
+export function catalogCardPrice(product: Product): { value: number; unitLabel: string } {
+  if (product.pricePerMeter != null) {
+    return { value: product.pricePerMeter, unitLabel: "м" };
+  }
+  return { value: unitPrice(product), unitLabel: saleUnitLabel(product.saleUnit) };
 }
 
 export function getPopularProducts(limit = 8): Product[] {
@@ -76,6 +94,8 @@ export function saleUnitLabel(unit: SaleUnit): string {
       return "карта";
     case "шт":
       return "шт";
+    case "боб":
+      return "боб";
   }
 }
 
@@ -98,6 +118,11 @@ const compactFormatter = new Intl.NumberFormat("ru-RU", {
 
 export function formatPrice(value: number): string {
   return `${priceFormatter.format(value)} р.`;
+}
+
+/** Цена в белорусских рублях для витрины (как на референсе). */
+export function formatPriceByn(value: number): string {
+  return `${priceFormatter.format(value)} BYN`;
 }
 
 export function formatPriceCompact(value: number): string {

@@ -1,5 +1,8 @@
 /** Единица, в которой товар продаётся и считается в корзине. */
-export type SaleUnit = "м" | "лист" | "шт" | "карта";
+export type SaleUnit = "м" | "лист" | "шт" | "карта" | "боб";
+
+/** Источник данных: статический каталог или выгрузка из БД (демо). */
+export type ProductSource = "static" | "db";
 
 export type StockState = "in" | "order";
 
@@ -55,4 +58,15 @@ export type Product = {
   pricePerUnit: number | null;
   stock: StockState;
   popular: boolean;
+  source?: ProductSource;
+  /** Артикул для витрины, например «15191». */
+  article?: string;
+  /** Название в плитке каталога (короче полного). */
+  cardTitle?: string;
+  /** Своё фото товара; иначе — изображение категории. */
+  image?: string;
+  /** Цена за метр, если в корзине считаем бухты/упаковки. */
+  pricePerMeter?: number | null;
+  /** Метров в одной единице продажи (бухта, упаковка). */
+  metersPerSaleUnit?: number | null;
 };
