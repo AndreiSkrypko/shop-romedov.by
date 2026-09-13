@@ -15,7 +15,7 @@ import {
   VIBER_HREF,
   WORK_HOURS,
 } from "@/lib/contacts";
-import { MAIN_SITE_URL, SITE_LEGAL_NAME, SITE_NAME } from "@/lib/site";
+import { MAIN_SITE_URL, SITE_LEGAL_NAME } from "@/lib/site";
 
 const CHANNELS = [
   { href: PHONE_HREF, label: "Позвонить", Icon: PhoneIcon },
@@ -32,8 +32,8 @@ export function Footer() {
           <div>
             <Logo invert />
             <p className="mt-5 max-w-xs text-sm leading-relaxed">
-              {SITE_NAME} — металлопрокат со склада в Минске и Борисове. Резка в размер, доставка по
-              Беларуси, полный цикл металлообработки на своём производстве.
+              Ромедов — металлообработка и подбор металлопроката. Минск и Борисов. Резка в размер,
+              доставка по всей Беларуси.
             </p>
             <a
               href={MAIN_SITE_URL}
