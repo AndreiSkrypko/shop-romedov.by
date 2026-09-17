@@ -285,15 +285,3 @@ grant execute on function public.admin_update_product(
   text, text, text, text, text, text, numeric, text, text, numeric, text, numeric,
   numeric, numeric, numeric, numeric, text, boolean, text, text, text, boolean
 ) to anon, authenticated;
-
--- Пример для «Трубы стальные» (можно удалить или изменить в админке)
-insert into public.subcategories (id, category_id, slug, name, image, sort_order, is_published)
-values
-  ('pipe-vgp', 'pipe', 'vgp', 'Трубы стальные водогазопроводные', '/products/pipe-sub/vgp.webp', 1, true),
-  ('pipe-electro', 'pipe', 'elektrosvarnye', 'Трубы стальные электросварные', '/products/pipe-sub/electro.webp', 2, true),
-  ('pipe-profile', 'pipe', 'profilnye', 'Трубы стальные профильные', '/products/pipe-sub/profile.webp', 3, true)
-on conflict (id) do update set
-  name = excluded.name,
-  image = excluded.image,
-  sort_order = excluded.sort_order,
-  updated_at = now();

@@ -1,0 +1,140 @@
+-- Товары: подкатегория «Сетка сварная d 3 мм» (mesh-d3).
+-- Перед запуском: supabase-seed-mesh-subcategories.sql.
+-- weight_kg — масса одной карты (ориентир для цены за карту из BYN/т).
+
+insert into public.products (
+  slug,
+  category_id,
+  subcategory_id,
+  name,
+  size,
+  dimension,
+  steel,
+  gost,
+  length_m,
+  sale_unit,
+  weight_kg,
+  price_per_ton,
+  price_per_unit,
+  price_per_meter,
+  meters_per_sale_unit,
+  stock,
+  popular,
+  article,
+  card_title,
+  image,
+  sort_order,
+  is_published,
+  updated_at
+)
+select
+  v.slug,
+  c.id,
+  'mesh-d3',
+  v.name,
+  v.size,
+  v.dimension,
+  v.steel,
+  v.gost,
+  null,
+  'карта',
+  v.weight_kg,
+  v.price_per_ton,
+  null,
+  null,
+  null,
+  'in',
+  false,
+  v.article,
+  v.card_title,
+  '/products/mesh.webp',
+  v.sort_order,
+  true,
+  now()
+from public.categories c
+cross join (
+  values
+    (
+      'setka-armiruyushchaya-art-07238',
+      'Сетка армирующая сварная С500 d3,0 мм, ячейка 100×100 мм, лист 1000×2000 мм, ГОСТ 23279, РБ',
+      '100×100 мм, лист 1000×2000 мм',
+      100::numeric,
+      'С500',
+      'ГОСТ 23279-2012',
+      2.48::numeric,
+      3930::numeric,
+      '07238',
+      'Сетка С500 d3, 100×100, лист 1000×2000',
+      1
+    ),
+    (
+      'setka-armiruyushchaya-art-07237',
+      'Сетка армирующая сварная 4С ВР-1 d3,0 мм, ячейка 50×50 мм, лист 500×2000 мм, ГОСТ 23279',
+      '50×50 мм, лист 500×2000 мм',
+      50::numeric,
+      'ВР-1',
+      'ГОСТ 23279-2012',
+      2.22::numeric,
+      3930::numeric,
+      '07237',
+      'Сетка ВР-1 d3, 50×50, лист 500×2000',
+      2
+    ),
+    (
+      'setka-armiruyushchaya-art-07236',
+      'Сетка армирующая сварная 4С ВР-1 d3,0 мм, ячейка 50×50 мм, лист 380×2000 мм, ГОСТ 23279',
+      '50×50 мм, лист 380×2000 мм',
+      50::numeric,
+      'ВР-1',
+      'ГОСТ 23279-2012',
+      1.69::numeric,
+      3930::numeric,
+      '07236',
+      'Сетка ВР-1 d3, 50×50, лист 380×2000',
+      3
+    ),
+    (
+      'setka-armiruyushchaya-art-07813',
+      'Сетка армирующая сварная 4С 3,0 мм, ВР-1 ячейка 150×150 мм, лист 1000×2000 мм, ГОСТ 23279',
+      '150×150 мм, лист 1000×2000 мм',
+      150::numeric,
+      'ВР-1',
+      'ГОСТ 23279-2012',
+      1.7::numeric,
+      3930::numeric,
+      '07813',
+      'Сетка ВР-1 d3, 150×150, лист 1000×2000',
+      4
+    )
+) as v(
+  slug,
+  name,
+  size,
+  dimension,
+  steel,
+  gost,
+  weight_kg,
+  price_per_ton,
+  article,
+  card_title,
+  sort_order
+)
+where c.slug = 'setka-armiruyushchaya'
+on conflict (slug) do update set
+  category_id = excluded.category_id,
+  subcategory_id = excluded.subcategory_id,
+  name = excluded.name,
+  size = excluded.size,
+  dimension = excluded.dimension,
+  steel = excluded.steel,
+  gost = excluded.gost,
+  sale_unit = excluded.sale_unit,
+  weight_kg = excluded.weight_kg,
+  price_per_ton = excluded.price_per_ton,
+  stock = excluded.stock,
+  article = excluded.article,
+  card_title = excluded.card_title,
+  image = excluded.image,
+  sort_order = excluded.sort_order,
+  is_published = excluded.is_published,
+  updated_at = now();

@@ -1,0 +1,153 @@
+-- Товары: подкатегория «Сварочные электроды» (supplies-electrodes).
+-- Перед запуском: supabase-seed-supplies-subcategories.sql.
+-- price_per_unit — цена упаковки (BYN/кг × масса упаковки); на плитке — BYN/шт.
+
+insert into public.products (
+  slug,
+  category_id,
+  subcategory_id,
+  name,
+  size,
+  dimension,
+  steel,
+  gost,
+  length_m,
+  sale_unit,
+  weight_kg,
+  price_per_ton,
+  price_per_unit,
+  price_per_meter,
+  meters_per_sale_unit,
+  stock,
+  popular,
+  article,
+  card_title,
+  image,
+  sort_order,
+  is_published,
+  updated_at
+)
+select
+  v.slug,
+  c.id,
+  'supplies-electrodes',
+  v.name,
+  v.size,
+  v.dimension,
+  v.steel,
+  v.gost,
+  null,
+  'шт',
+  v.weight_kg,
+  null,
+  v.price_per_unit,
+  null,
+  null,
+  'in',
+  false,
+  v.article,
+  v.card_title,
+  '/products/supplies.webp',
+  v.sort_order,
+  true,
+  now()
+from public.categories c
+cross join (
+  values
+    (
+      'soputstvuyushchie-art-17283',
+      'Электроды МЭЗ МРЗ Ультра d=3,0 по 2,5 кг, РБ',
+      'Ø3,0 мм, уп. 2,5 кг',
+      3::numeric,
+      'МЭЗ Ультра',
+      'ТУ производителя',
+      2.5::numeric,
+      25.25::numeric,
+      '17283',
+      'Электроды Ультра d3,0, 2,5 кг',
+      1
+    ),
+    (
+      'soputstvuyushchie-art-17282',
+      'Электроды МЭЗ МРЗ Ультра d=3,0 по 1 кг, РБ',
+      'Ø3,0 мм, уп. 1 кг',
+      3::numeric,
+      'МЭЗ Ультра',
+      'ТУ производителя',
+      1::numeric,
+      10.1::numeric,
+      '17282',
+      'Электроды Ультра d3,0, 1 кг',
+      2
+    ),
+    (
+      'soputstvuyushchie-art-15385',
+      'Электроды МР-3 ф3 мм ПЛАЗМА (уп. 2,5 кг) ТМ Континент (ООО «СЗСЭ»), Узбекистан',
+      'Ø3 мм, уп. 2,5 кг',
+      3::numeric,
+      'МР-3',
+      'ГОСТ 9466-75',
+      2.5::numeric,
+      45.5::numeric,
+      '15385',
+      'Электроды МР-3 ф3, Континент, 2,5 кг',
+      3
+    ),
+    (
+      'soputstvuyushchie-art-15384',
+      'Электроды МР-3 ф3 мм ПЛАЗМА (уп. 1 кг) ТМ Континент',
+      'Ø3 мм, уп. 1 кг',
+      3::numeric,
+      'МР-3',
+      'ГОСТ 9466-75',
+      1::numeric,
+      17.8::numeric,
+      '15384',
+      'Электроды МР-3 ф3, Континент, 1 кг',
+      4
+    ),
+    (
+      'soputstvuyushchie-art-16160',
+      'Электроды МР-3, D 4,0 (5,5 кг), п-во Судиславль, (РФ)',
+      'Ø4,0 мм, уп. 5,5 кг',
+      4::numeric,
+      'МР-3',
+      'ГОСТ 9466-75',
+      5.5::numeric,
+      67.65::numeric,
+      '16160',
+      'Электроды МР-3 d4,0, 5,5 кг, РФ',
+      5
+    )
+) as v(
+  slug,
+  name,
+  size,
+  dimension,
+  steel,
+  gost,
+  weight_kg,
+  price_per_unit,
+  article,
+  card_title,
+  sort_order
+)
+where c.slug = 'soputstvuyushchie-tovary'
+on conflict (slug) do update set
+  category_id = excluded.category_id,
+  subcategory_id = excluded.subcategory_id,
+  name = excluded.name,
+  size = excluded.size,
+  dimension = excluded.dimension,
+  steel = excluded.steel,
+  gost = excluded.gost,
+  sale_unit = excluded.sale_unit,
+  weight_kg = excluded.weight_kg,
+  price_per_unit = excluded.price_per_unit,
+  stock = excluded.stock,
+  article = excluded.article,
+  card_title = excluded.card_title,
+  image = excluded.image,
+  sort_order = excluded.sort_order,
+  is_published = excluded.is_published,
+  updated_at = now();

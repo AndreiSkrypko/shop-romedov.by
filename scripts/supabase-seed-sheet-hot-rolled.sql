@@ -6,26 +6,7 @@ update public.categories
 set is_published = true
 where slug = 'listy-stalnye' or id in ('sheet', 'listy-stalnye');
 
-insert into public.subcategories (id, category_id, slug, name, image, sort_order, is_published, updated_at)
-select
-  'sheet-gk',
-  c.id,
-  'goryachekatannyy',
-  'Лист стальной горячекатанный',
-  coalesce(nullif(c.image, ''), '/products/sheet.webp'),
-  1,
-  true,
-  now()
-from public.categories c
-where c.slug = 'listy-stalnye'
-on conflict (id) do update set
-  category_id = excluded.category_id,
-  slug = excluded.slug,
-  name = excluded.name,
-  image = excluded.image,
-  sort_order = excluded.sort_order,
-  is_published = excluded.is_published,
-  updated_at = now();
+-- Подкатегории: scripts/supabase-seed-sheet-subcategories.sql
 
 insert into public.products (
   slug,
