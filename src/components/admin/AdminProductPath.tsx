@@ -1,6 +1,6 @@
 import { AlertTriangle } from "lucide-react";
 
-import type { AdminProductRow } from "@/lib/admin/catalog-snapshot.server";
+import type { AdminProductRow } from "@/lib/admin/catalog-snapshot";
 
 export function AdminProductPath({ row }: { row: AdminProductRow }) {
   const { categoryName, subcategoryName, placement } = row;

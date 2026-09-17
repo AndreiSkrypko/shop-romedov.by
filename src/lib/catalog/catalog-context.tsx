@@ -2,6 +2,7 @@ import { createContext, useContext } from "react";
 import type { ReactNode } from "react";
 
 import type { Category } from "./types";
+import { useLiveCatalog } from "./use-live-catalog";
 
 type CatalogContextValue = {
   categories: Category[];
@@ -14,14 +15,19 @@ const CatalogContext = createContext<CatalogContextValue>({
 });
 
 export function CatalogCategoriesProvider({
-  categories,
-  productCountByCategoryId = {},
+  categories: initialCategories,
+  productCountByCategoryId: initialProductCountByCategoryId = {},
   children,
 }: {
   categories: Category[];
   productCountByCategoryId?: Readonly<Record<string, number>>;
   children: ReactNode;
 }) {
+  const { categories, productCountByCategoryId } = useLiveCatalog(
+    initialCategories,
+    initialProductCountByCategoryId,
+  );
+
   return (
     <CatalogContext.Provider value={{ categories, productCountByCategoryId }}>
       {children}

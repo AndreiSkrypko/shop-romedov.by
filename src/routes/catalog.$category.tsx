@@ -16,6 +16,7 @@ import {
   listSubcategoriesByCategoryAsync,
   unitPrice,
 } from "@/lib/catalog";
+import { useLiveCategoryPage } from "@/lib/catalog/use-live-category-page";
 import type { CatalogFilters } from "@/lib/catalog";
 import { PHONE_DISPLAY, PHONE_HREF } from "@/lib/contacts";
 import { buildSeo } from "@/lib/seo";
@@ -52,7 +53,9 @@ export const Route = createFileRoute("/catalog/$category")({
 });
 
 function CategoryPage() {
-  const { category, products, subcategories } = Route.useLoaderData();
+  const { category: categorySlug } = Route.useParams();
+  const loaderData = Route.useLoaderData();
+  const { category, products, subcategories } = useLiveCategoryPage(categorySlug, loaderData);
   const { sub: subSlug } = Route.useSearch();
   const activeSub = findSubcategory(subcategories, subSlug);
   const categoryProducts = useMemo(

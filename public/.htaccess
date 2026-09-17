@@ -1,0 +1,14 @@
+# Hoster.by (Apache): новые категории/товары из Supabase без пересборки dist.
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
+
+  RewriteRule ^api/ - [L]
+
+  RewriteCond %{REQUEST_FILENAME} -f [OR]
+  RewriteCond %{REQUEST_FILENAME} -d
+  RewriteRule ^ - [L]
+
+  RewriteRule ^catalog/[^/]+/?$ /index.html [L]
+  RewriteRule ^product/[^/]+/?$ /index.html [L]
+</IfModule>

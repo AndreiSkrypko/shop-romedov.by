@@ -14,7 +14,7 @@ npm run lint     # eslint + prettier
 
 Админка (товары в Supabase): http://localhost:3000/admin/login — логин `admin`, пароль `romedov2026`.  
 Если таблица `products` уже была создана раньше, выполните в SQL Editor файл `scripts/supabase-admin-rpc.sql`.
-Для загрузки фото товаров в админке: `scripts/supabase-storage.sql` и **Secret key** в `.env` (`SUPABASE_SECRET_KEY`, см. `.env.example`).
+Для загрузки фото в админке на Hoster.by: выполните `scripts/supabase-storage.sql` в Supabase (политика загрузки через publishable key).
 
 Каталог арматуры из Supabase (статика в коде убрана):
 
@@ -27,8 +27,9 @@ npm run lint     # eslint + prettier
 
 Подкатегории (плитки над товарами): `scripts/supabase-subcategories.sql` — затем **Админка → Подкатегории** и поле «Подкатегория» в товаре.
 
-`npm run build` кладёт готовые статические файлы в `dist/` — их же можно заливать на
-Hoster.by. Для Vercel используется `npm run build:vercel` и `vercel.json`.
+`npm run build` кладёт статику в `dist/` (витрина + админка `/admin/login`) — заливайте на Hoster.by.
+Каталог и админка ходят в Supabase из браузера (ключ в `src/lib/supabase/config.ts`).
+Для Vercel: `npm run build:vercel` и `vercel.json`.
 
 ## Структура
 

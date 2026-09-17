@@ -9,13 +9,14 @@ import { AdminFormScreen } from "@/components/admin/AdminFormScreen";
 import { AdminProductPath } from "@/components/admin/AdminProductPath";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { ProductForm } from "@/components/admin/ProductForm";
+import { AdminCatalogLoading } from "@/components/admin/AdminCatalogLoading";
 import {
   adminCreateProduct,
   adminDeleteProduct,
-  adminGetCatalogSnapshot,
   adminUpdateProduct,
-} from "@/lib/admin/admin-catalog.functions";
+} from "@/lib/admin/admin-catalog";
 import { requireAdminSession } from "@/lib/admin/require-admin";
+import { useAdminCatalogSnapshot } from "@/lib/admin/useAdminCatalogSnapshot";
 import { adminCardClass } from "@/lib/admin/ui";
 import { formatPrice, productImage, unitPrice } from "@/lib/catalog";
 import type { Product } from "@/lib/catalog/types";
@@ -34,7 +35,6 @@ export const Route = createFileRoute("/admin/products")({
       search.needsSub === true || search.needsSub === "true" || search.needsSub === "1",
     q: typeof search.q === "string" ? search.q : undefined,
   }),
-  loader: () => adminGetCatalogSnapshot(),
   head: () => ({
     meta: [{ name: "robots", content: "noindex, nofollow" }],
     title: "Товары — админка",
@@ -44,7 +44,7 @@ export const Route = createFileRoute("/admin/products")({
 
 function AdminProductsPage() {
   const router = useRouter();
-  const snapshot = Route.useLoaderData();
+  const { snapshot, loading, error, refresh } = useAdminCatalogSnapshot();
   const { category: categoryFromUrl, needsSub, q: qFromUrl } = Route.useSearch();
   const [panel, setPanel] = useState<"none" | "create" | "edit">("none");
   const [editing, setEditing] = useState<Product | null>(null);
@@ -52,7 +52,7 @@ function AdminProductsPage() {
   const [categoryFilter, setCategoryFilter] = useState(categoryFromUrl ?? "");
   const [onlyNeedsSub, setOnlyNeedsSub] = useState(needsSub ?? false);
 
-  const categoriesForForm = snapshot.categories.map((row) => row.category);
+  const categoriesForForm = snapshot?.categories.map((row) => row.category) ?? [];
   const formOpen = panel !== "none";
 
   const closeForm = () => {
@@ -61,6 +61,7 @@ function AdminProductsPage() {
   };
 
   const filtered = useMemo(() => {
+    if (!snapshot) return [];
     const q = filter.trim().toLowerCase();
     return snapshot.products.filter((row) => {
       if (categoryFilter && row.product.categoryId !== categoryFilter) return false;
@@ -73,23 +74,28 @@ function AdminProductsPage() {
         (row.subcategoryName?.toLowerCase().includes(q) ?? false)
       );
     });
-  }, [filter, snapshot.products, categoryFilter, onlyNeedsSub]);
-
-  const refresh = async () => {
-    await router.invalidate();
-  };
+  }, [filter, snapshot, categoryFilter, onlyNeedsSub]);
 
   const handleDelete = async (slug: string, name: string) => {
     if (!confirm(`Удалить «${name}»?`)) return;
     try {
-      await adminDeleteProduct({ data: { slug } });
+      await adminDeleteProduct(slug);
       toast.success("Товар удалён");
       closeForm();
-      await refresh();
+      refresh();
     } catch (cause) {
       toast.error(cause instanceof Error ? cause.message : "Не удалось удалить");
     }
   };
+
+  if (loading || !snapshot) {
+    return (
+      <AdminShell title="Товары">
+        {error ? <p className="mt-6 text-sm text-destructive">{error}</p> : null}
+        <AdminCatalogLoading />
+      </AdminShell>
+    );
+  }
 
   return (
     <AdminShell
@@ -118,14 +124,14 @@ function AdminProductsPage() {
             onCancel={closeForm}
             onSubmit={async (formData) => {
               if (panel === "create") {
-                await adminCreateProduct({ data: formData });
+                await adminCreateProduct(formData);
                 toast.success("Товар добавлен");
               } else {
-                await adminUpdateProduct({ data: formData });
+                await adminUpdateProduct(formData);
                 toast.success("Сохранено");
               }
               closeForm();
-              await refresh();
+              refresh();
             }}
           />
         </AdminFormScreen>

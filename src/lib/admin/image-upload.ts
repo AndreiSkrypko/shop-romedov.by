@@ -1,6 +1,4 @@
-import { createClient } from "@supabase/supabase-js";
-
-import { SUPABASE_URL, getSupabaseSecretKey } from "@/lib/supabase/config";
+import { getSupabase } from "@/lib/supabase/client";
 
 const BUCKET = "product-images";
 const MAX_BYTES = 5 * 1024 * 1024;
@@ -22,18 +20,6 @@ function extensionFor(type: string): string {
   }
 }
 
-function serviceClient() {
-  const secretKey = getSupabaseSecretKey();
-  if (!secretKey) {
-    throw new Error(
-      "Для загрузки фото укажите SUPABASE_SECRET_KEY в .env (Secret key в Supabase → API Keys)",
-    );
-  }
-  return createClient(SUPABASE_URL, secretKey, {
-    auth: { persistSession: false, autoRefreshToken: false },
-  });
-}
-
 async function uploadCatalogImage(
   file: File,
   folder: "products" | "categories" | "subcategories",
@@ -50,7 +36,7 @@ async function uploadCatalogImage(
   const path = `${folder}/${safeSlug}/${Date.now()}.${extensionFor(file.type)}`;
   const body = new Uint8Array(await file.arrayBuffer());
 
-  const supabase = serviceClient();
+  const supabase = getSupabase();
   const { error } = await supabase.storage.from(BUCKET).upload(path, body, {
     contentType: file.type,
     upsert: false,
@@ -59,6 +45,11 @@ async function uploadCatalogImage(
   if (error) {
     if (error.message.includes("Bucket not found")) {
       throw new Error("Создайте bucket product-images — scripts/supabase-storage.sql");
+    }
+    if (error.message.includes("row-level security") || error.message.includes("Unauthorized")) {
+      throw new Error(
+        "Загрузка фото запрещена политикой Storage — выполните scripts/supabase-storage.sql в Supabase",
+      );
     }
     throw new Error(error.message);
   }

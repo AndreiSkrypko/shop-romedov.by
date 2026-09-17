@@ -1,6 +1,6 @@
-import { parseAdminSubcategoryForm } from "./subcategory-input";
-import { readImageFileFromForm, uploadSubcategoryImage } from "./image-upload.server";
 import type { AdminSubcategoryInput } from "./subcategory-input";
+import { parseAdminSubcategoryForm } from "./subcategory-input";
+import { readImageFileFromForm, uploadSubcategoryImage } from "./image-upload";
 
 export async function parseAdminSubcategoryFormWithImage(
   formData: FormData,

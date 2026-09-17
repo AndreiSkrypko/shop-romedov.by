@@ -3,7 +3,7 @@ import { mapCategoryRow } from "@/lib/supabase/map-category";
 import type { CategoryRow } from "@/lib/supabase/types";
 import type { Category } from "@/lib/catalog/types";
 
-import { ADMIN_RPC_SECRET } from "./constants.server";
+import { ADMIN_RPC_SECRET } from "./constants";
 import type { AdminCategoryInput } from "./category-input";
 
 function rpcError(error: { message: string; code?: string }, fallback: string): never {

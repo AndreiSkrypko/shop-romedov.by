@@ -2,11 +2,12 @@ import { Link, createFileRoute, redirect, useRouter } from "@tanstack/react-rout
 import { Loader2 } from "lucide-react";
 import { useState } from "react";
 
-import { adminLogin, fetchAdminSession } from "@/lib/admin/admin-auth.functions";
+import { adminLogin, fetchAdminSession } from "@/lib/admin/admin-auth";
 
 export const Route = createFileRoute("/admin/login")({
-  beforeLoad: async () => {
-    const session = await fetchAdminSession();
+  beforeLoad: () => {
+    if (typeof window === "undefined") return;
+    const session = fetchAdminSession();
     if (session.authenticated) {
       throw redirect({ to: "/admin" });
     }
@@ -36,7 +37,7 @@ function AdminLoginPage() {
     setSending(true);
 
     try {
-      await adminLogin({ data: { username, password } });
+      await adminLogin({ username, password });
       await router.navigate({ to: "/admin" });
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Не удалось войти");

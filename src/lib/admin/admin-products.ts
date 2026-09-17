@@ -2,7 +2,7 @@ import { getSupabase } from "@/lib/supabase/client";
 import { mapProductRow } from "@/lib/supabase/map-product";
 import type { ProductRow } from "@/lib/supabase/types";
 
-import { ADMIN_RPC_SECRET } from "./constants.server";
+import { ADMIN_RPC_SECRET } from "./constants";
 import type { AdminProductInput } from "./product-input";
 
 function rpcError(error: { message: string; code?: string }, fallback: string): never {

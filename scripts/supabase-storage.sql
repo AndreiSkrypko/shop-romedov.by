@@ -18,3 +18,12 @@ create policy "product-images: публичное чтение"
   on storage.objects for select
   to public
   using (bucket_id = 'product-images');
+
+drop policy if exists "product-images: загрузка из админки" on storage.objects;
+create policy "product-images: загрузка из админки"
+  on storage.objects for insert
+  to anon, authenticated
+  with check (
+    bucket_id = 'product-images'
+    and (storage.foldername(name))[1] in ('products', 'categories', 'subcategories')
+  );

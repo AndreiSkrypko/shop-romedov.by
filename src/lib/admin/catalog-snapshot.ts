@@ -1,8 +1,8 @@
 import type { Category, Product, Subcategory } from "@/lib/catalog/types";
 
-import { listAdminCategoriesFromDb } from "./categories.server";
-import { listAdminProductsFromDb } from "./products.server";
-import { listAdminSubcategoriesFromDb } from "./subcategories.server";
+import { listAdminCategoriesFromDb } from "./admin-categories";
+import { listAdminProductsFromDb } from "./admin-products";
+import { listAdminSubcategoriesFromDb } from "./admin-subcategories";
 
 export type ProductPlacement = "in_subcategory" | "in_category" | "needs_subcategory";
 
@@ -12,7 +12,6 @@ export type AdminCategoryRow = {
   productCount: number;
   productsInSubcategories: number;
   productsInCategoryOnly: number;
-  /** Товары без подкатегории при наличии подкатегорий у категории */
   unassignedToSubcategory: number;
 };
 
@@ -26,9 +25,7 @@ export type AdminProductRow = {
 export type AdminCatalogSnapshot = {
   stats: {
     categories: number;
-    /** Подкатегории у существующих категорий (как в структуре ниже). */
     subcategories: number;
-    /** Подкатегории, у которых нет категории в таблице categories (часто после частичного SQL-seed). */
     orphanedSubcategories: number;
     products: number;
     productsNeedSubcategory: number;
@@ -36,7 +33,6 @@ export type AdminCatalogSnapshot = {
   categories: AdminCategoryRow[];
   products: AdminProductRow[];
   subcategories: Subcategory[];
-  /** Подкатегории с category_id, которого нет в categories. */
   orphanedSubcategories: Subcategory[];
   dbCategoryIds: string[];
 };

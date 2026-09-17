@@ -1,7 +1,7 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 
-import { adminLogout } from "@/lib/admin/admin-auth.functions";
+import { adminLogout } from "@/lib/admin/admin-auth";
 
 const NAV = [
   { to: "/admin", label: "Обзор", end: true },

@@ -1,4 +1,4 @@
-import { Link, createFileRoute, useRouter } from "@tanstack/react-router";
+import { Link, createFileRoute } from "@tanstack/react-router";
 import { AlertTriangle, Pencil, Plus, Trash2 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -8,19 +8,19 @@ import { AdminFieldInstructions } from "@/components/admin/AdminFieldInstruction
 import { AdminFormScreen } from "@/components/admin/AdminFormScreen";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { CategoryForm } from "@/components/admin/CategoryForm";
+import { AdminCatalogLoading } from "@/components/admin/AdminCatalogLoading";
 import {
   adminCreateCategory,
   adminDeleteCategory,
-  adminGetCatalogSnapshot,
   adminUpdateCategory,
-} from "@/lib/admin/admin-catalog.functions";
+} from "@/lib/admin/admin-catalog";
 import { requireAdminSession } from "@/lib/admin/require-admin";
+import { useAdminCatalogSnapshot } from "@/lib/admin/useAdminCatalogSnapshot";
 import { adminCardClass } from "@/lib/admin/ui";
 import type { Category } from "@/lib/catalog/types";
 
 export const Route = createFileRoute("/admin/categories")({
   beforeLoad: requireAdminSession,
-  loader: () => adminGetCatalogSnapshot(),
   head: () => ({
     meta: [{ name: "robots", content: "noindex, nofollow" }],
     title: "Категории — админка",
@@ -29,8 +29,7 @@ export const Route = createFileRoute("/admin/categories")({
 });
 
 function AdminCategoriesPage() {
-  const router = useRouter();
-  const snapshot = Route.useLoaderData();
+  const { snapshot, loading, error, refresh } = useAdminCatalogSnapshot();
   const [panel, setPanel] = useState<"none" | "create" | "edit">("none");
   const [editing, setEditing] = useState<Category | null>(null);
   const [filter, setFilter] = useState("");
@@ -42,6 +41,7 @@ function AdminCategoriesPage() {
   };
 
   const filtered = useMemo(() => {
+    if (!snapshot) return [];
     const q = filter.trim().toLowerCase();
     if (!q) return snapshot.categories;
     return snapshot.categories.filter(
@@ -49,23 +49,28 @@ function AdminCategoriesPage() {
         row.category.name.toLowerCase().includes(q) ||
         row.category.slug.toLowerCase().includes(q),
     );
-  }, [filter, snapshot.categories]);
-
-  const refresh = async () => {
-    await router.invalidate();
-  };
+  }, [filter, snapshot]);
 
   const handleDelete = async (id: string, name: string) => {
     if (!confirm(`Удалить категорию «${name}»? Товары и подкатегории нужно удалить или перенести отдельно.`)) return;
     try {
-      await adminDeleteCategory({ data: { id } });
+      await adminDeleteCategory(id);
       toast.success("Категория удалена");
       closeForm();
-      await refresh();
+      refresh();
     } catch (cause) {
       toast.error(cause instanceof Error ? cause.message : "Не удалось удалить");
     }
   };
+
+  if (loading || !snapshot) {
+    return (
+      <AdminShell title="Категории">
+        {error ? <p className="mt-6 text-sm text-destructive">{error}</p> : null}
+        <AdminCatalogLoading />
+      </AdminShell>
+    );
+  }
 
   return (
     <AdminShell
@@ -91,14 +96,14 @@ function AdminCategoriesPage() {
             onCancel={closeForm}
             onSubmit={async (formData) => {
               if (panel === "create") {
-                await adminCreateCategory({ data: formData });
+                await adminCreateCategory(formData);
                 toast.success("Категория создана");
               } else {
-                await adminUpdateCategory({ data: formData });
+                await adminUpdateCategory(formData);
                 toast.success("Сохранено");
               }
               closeForm();
-              await refresh();
+              refresh();
             }}
           />
         </AdminFormScreen>

@@ -1,6 +1,6 @@
 import type { AdminCategoryInput } from "./category-input";
 import { parseAdminCategoryForm } from "./category-input";
-import { readImageFileFromForm, uploadCategoryImage } from "./image-upload.server";
+import { readImageFileFromForm, uploadCategoryImage } from "./image-upload";
 
 export async function parseAdminCategoryFormWithImage(
   formData: FormData,

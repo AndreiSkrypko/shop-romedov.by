@@ -1,8 +1,7 @@
 import type { AdminProductInput } from "./product-input";
 import { parseAdminProductForm } from "./product-input";
-import { readImageFileFromForm, uploadProductImage } from "./image-upload.server";
+import { readImageFileFromForm, uploadProductImage } from "./image-upload";
 
-/** Парсит форму товара и при необходимости загружает фото в Storage. */
 export async function parseAdminProductFormWithImage(formData: FormData): Promise<AdminProductInput> {
   const input = parseAdminProductForm(formData);
   const file = readImageFileFromForm(formData);

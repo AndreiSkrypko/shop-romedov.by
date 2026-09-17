@@ -3,7 +3,7 @@ import { mapSubcategoryRow } from "@/lib/supabase/map-subcategory";
 import type { SubcategoryRow } from "@/lib/supabase/types";
 import type { Subcategory } from "@/lib/catalog/types";
 
-import { ADMIN_RPC_SECRET } from "./constants.server";
+import { ADMIN_RPC_SECRET } from "./constants";
 import type { AdminSubcategoryInput } from "./subcategory-input";
 
 function rpcError(error: { message: string; code?: string }, fallback: string): never {

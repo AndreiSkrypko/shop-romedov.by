@@ -5,13 +5,13 @@ import { AlertTriangle } from "lucide-react";
 import { AdminCatalogGuide } from "@/components/admin/AdminCatalogGuide";
 import { AdminProductPath } from "@/components/admin/AdminProductPath";
 import { AdminShell } from "@/components/admin/AdminShell";
-import { adminGetCatalogSnapshot } from "@/lib/admin/admin-catalog.functions";
+import { AdminCatalogLoading } from "@/components/admin/AdminCatalogLoading";
 import { requireAdminSession } from "@/lib/admin/require-admin";
+import { useAdminCatalogSnapshot } from "@/lib/admin/useAdminCatalogSnapshot";
 import { adminCardClass } from "@/lib/admin/ui";
 
 export const Route = createFileRoute("/admin/")({
   beforeLoad: requireAdminSession,
-  loader: () => adminGetCatalogSnapshot(),
   head: () => ({
     meta: [{ name: "robots", content: "noindex, nofollow" }],
     title: "Обзор каталога — админка",
@@ -20,7 +20,17 @@ export const Route = createFileRoute("/admin/")({
 });
 
 function AdminDashboardPage() {
-  const snapshot = Route.useLoaderData();
+  const { snapshot, loading, error } = useAdminCatalogSnapshot();
+
+  if (loading || !snapshot) {
+    return (
+      <AdminShell title="Обзор каталога" subtitle="Загрузка данных из Supabase…">
+        {error ? <p className="mt-6 text-sm text-destructive">{error}</p> : null}
+        <AdminCatalogLoading />
+      </AdminShell>
+    );
+  }
+
   const { stats } = snapshot;
 
   return (

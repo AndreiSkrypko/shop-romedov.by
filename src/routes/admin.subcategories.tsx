@@ -8,13 +8,14 @@ import { AdminFieldInstructions } from "@/components/admin/AdminFieldInstruction
 import { AdminFormScreen } from "@/components/admin/AdminFormScreen";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { SubcategoryForm } from "@/components/admin/SubcategoryForm";
+import { AdminCatalogLoading } from "@/components/admin/AdminCatalogLoading";
 import {
   adminCreateSubcategory,
   adminDeleteSubcategory,
-  adminGetCatalogSnapshot,
   adminUpdateSubcategory,
-} from "@/lib/admin/admin-catalog.functions";
+} from "@/lib/admin/admin-catalog";
 import { requireAdminSession } from "@/lib/admin/require-admin";
+import { useAdminCatalogSnapshot } from "@/lib/admin/useAdminCatalogSnapshot";
 import { adminCardClass, adminLabelClass } from "@/lib/admin/ui";
 import { countSubcategoryProducts } from "@/lib/catalog";
 import type { Subcategory } from "@/lib/catalog/types";
@@ -28,7 +29,6 @@ export const Route = createFileRoute("/admin/subcategories")({
   validateSearch: (search: Record<string, unknown>): SubSearch => ({
     category: typeof search.category === "string" ? search.category : undefined,
   }),
-  loader: () => adminGetCatalogSnapshot(),
   head: () => ({
     meta: [{ name: "robots", content: "noindex, nofollow" }],
     title: "Подкатегории — админка",
@@ -38,10 +38,10 @@ export const Route = createFileRoute("/admin/subcategories")({
 
 function AdminSubcategoriesPage() {
   const router = useRouter();
-  const snapshot = Route.useLoaderData();
+  const { snapshot, loading, error, refresh } = useAdminCatalogSnapshot();
   const { category: categoryIdFromUrl } = Route.useSearch();
 
-  const categories = snapshot.categories.map((row) => row.category);
+  const categories = snapshot?.categories.map((row) => row.category) ?? [];
   const [categoryId, setCategoryId] = useState(
     categoryIdFromUrl ?? categories[0]?.id ?? "",
   );
@@ -54,35 +54,40 @@ function AdminSubcategoriesPage() {
     setEditing(null);
   };
 
-  const categoryRow = snapshot.categories.find((r) => r.category.id === categoryId);
+  const categoryRow = snapshot?.categories.find((r) => r.category.id === categoryId);
   const category = categoryRow?.category;
   const subsForCategory = useMemo(
     () =>
-      snapshot.subcategories
+      (snapshot?.subcategories ?? [])
         .filter((s) => s.categoryId === categoryId)
         .sort((a, b) => a.order - b.order),
-    [snapshot.subcategories, categoryId],
+    [snapshot, categoryId],
   );
 
-  const orphanedSubs = snapshot.orphanedSubcategories ?? [];
+  const orphanedSubs = snapshot?.orphanedSubcategories ?? [];
 
-  const dbProducts = snapshot.products.map((r) => r.product);
-
-  const refresh = async () => {
-    await router.invalidate();
-  };
+  const dbProducts = snapshot?.products.map((r) => r.product) ?? [];
 
   const handleDelete = async (id: string, name: string) => {
     if (!confirm(`Удалить подкатегорию «${name}»?`)) return;
     try {
-      await adminDeleteSubcategory({ data: { id } });
+      await adminDeleteSubcategory(id);
       toast.success("Подкатегория удалена");
       closeForm();
-      await refresh();
+      refresh();
     } catch (cause) {
       toast.error(cause instanceof Error ? cause.message : "Не удалось удалить");
     }
   };
+
+  if (loading || !snapshot) {
+    return (
+      <AdminShell title="Подкатегории">
+        {error ? <p className="mt-6 text-sm text-destructive">{error}</p> : null}
+        <AdminCatalogLoading />
+      </AdminShell>
+    );
+  }
 
   return (
     <AdminShell
@@ -112,14 +117,14 @@ function AdminSubcategoriesPage() {
             onCancel={closeForm}
             onSubmit={async (formData) => {
               if (panel === "create") {
-                await adminCreateSubcategory({ data: formData });
+                await adminCreateSubcategory(formData);
                 toast.success("Подкатегория создана");
               } else {
-                await adminUpdateSubcategory({ data: formData });
+                await adminUpdateSubcategory(formData);
                 toast.success("Сохранено");
               }
               closeForm();
-              await refresh();
+              refresh();
             }}
           />
         </AdminFormScreen>
