@@ -3,10 +3,13 @@ import { Check, Heart, Loader2, Scale, ShoppingCart } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 
+import { ProductMedia } from "@/components/shop/ProductMedia";
 import { QuantityStepper } from "@/components/shop/QuantityStepper";
+import { RequestForm } from "@/components/shop/RequestForm";
 import { ShopBreadcrumbs } from "@/components/shop/ShopBreadcrumbs";
 import { useCart } from "@/lib/cart-context";
 import {
+  canAddProductToCart,
   catalogCardPrice,
   formatDecimal,
   formatPrice,
@@ -15,15 +18,20 @@ import {
   formatWeight,
   lineTotal,
   lineWeightKg,
+  clampOrderQuantity,
   minQuantity,
-  productImage,
+  productIsOnOrder,
+  productRequestDefaultMessage,
   quantityStep,
-  saleUnitLabel,
+  saleUnitLabelForProduct,
+  stockStatusInlineClass,
+  stockStatusLabel,
   tonPrice,
   unitPrice,
 } from "@/lib/catalog";
 import type { Category, Product } from "@/lib/catalog";
-import { PHONE_HREF } from "@/lib/contacts";
+import { isFiberglassCoil, isFiberglassRebar, isFiberglassRod } from "@/lib/catalog/fiberglass-visual";
+import { PHONE_DISPLAY, PHONE_HREF } from "@/lib/contacts";
 import { CATALOG_PRICE_DISCLAIMER } from "@/lib/site";
 
 type ProductDetailCommerceProps = {
@@ -33,20 +41,25 @@ type ProductDetailCommerceProps = {
 
 export function ProductDetailCommerce({ product, category }: ProductDetailCommerceProps) {
   const { add } = useCart();
-  const unit = saleUnitLabel(product.saleUnit);
+  const unit = saleUnitLabelForProduct(product);
   const step = quantityStep(product);
   const ton = tonPrice(product);
   const metersPerUnit = product.metersPerSaleUnit ?? product.lengthM ?? 1;
   const dualUnit = product.saleUnit === "боб" && metersPerUnit > 1;
   const byMeter = product.saleUnit === "м";
+  const showCart = canAddProductToCart(product);
+  const showRequest = productIsOnOrder(product);
 
   const [qtyUnits, setQtyUnits] = useState(1);
-  const [qtyMeters, setQtyMeters] = useState(byMeter ? (step === 1 ? 1 : 10) : metersPerUnit);
+  const [qtyMeters, setQtyMeters] = useState(byMeter ? 1 : metersPerUnit);
   const [adding, setAdding] = useState(false);
   const [added, setAdded] = useState(false);
 
   const cardPrice = catalogCardPrice(product);
   const pricePerPackage = product.pricePerUnit ?? unitPrice(product);
+  const pricePerMeterLine =
+    byMeter && ton !== null ? unitPrice(product) : product.pricePerMeter ?? null;
+  const tonsFromMeters = (meters: number) => (meters * product.weightKg) / 1000;
 
   const syncMetersFromUnits = (units: number) => {
     setQtyUnits(units);
@@ -65,12 +78,13 @@ export function ProductDetailCommerce({ product, category }: ProductDetailCommer
 
   const handleAdd = () => {
     setAdding(true);
-    add(product.slug, orderQuantity);
+    const qty = clampOrderQuantity(product, orderQuantity);
+    add(product.slug, qty);
     setAdding(false);
     setAdded(true);
     window.setTimeout(() => setAdded(false), 2000);
     toast.success("Добавлено в корзину", {
-      description: `${formatQuantity(orderQuantity)} ${byMeter && !dualUnit ? "м" : unit}`,
+      description: `${formatQuantity(qty)} ${byMeter && !dualUnit ? "м" : unit}`,
     });
   };
 
@@ -79,16 +93,30 @@ export function ProductDetailCommerce({ product, category }: ProductDetailCommer
       ? product.cardTitle
       : product.name.slice(0, 48) + (product.name.length > 48 ? "…" : "");
 
+  const lengthSpecLabel = isFiberglassCoil(product)
+    ? "Длина бухты"
+    : isFiberglassRod(product)
+      ? "Длина прутка"
+      : "Мерная длина";
+
   const specs: Array<[string, string]> = [
     [category.dimensionLabel, product.size],
+    ...(isFiberglassRebar(product)
+      ? ([["Форма поставки", isFiberglassCoil(product) ? "Бухта" : "Пруток"]] as Array<
+          [string, string]
+        >)
+      : []),
     ["Марка / материал", product.steel],
     ["Стандарт", product.gost],
     ["Единица продажи", unit],
     [`Вес, кг/${unit}`, formatDecimal(product.weightKg)],
     ...(product.lengthM !== null
-      ? ([["Мерная длина", `${formatDecimal(product.lengthM)} м`]] as Array<[string, string]>)
+      ? ([[lengthSpecLabel, `${formatDecimal(product.lengthM)} м`]] as Array<[string, string]>)
       : []),
-    ["Наличие", product.stock === "in" ? "В наличии" : "Под заказ"],
+    ...(product.pricePerMeter != null
+      ? ([["Цена за метр", formatPriceByn(product.pricePerMeter)]] as Array<[string, string]>)
+      : []),
+    ["Наличие", stockStatusLabel(product.stock)],
     ...(ton !== null ? ([["Цена за тонну", formatPrice(ton)]] as Array<[string, string]>) : []),
   ];
 
@@ -108,11 +136,7 @@ export function ProductDetailCommerce({ product, category }: ProductDetailCommer
 
       <div className="mt-8 grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,26rem)] lg:items-start">
         <div className="overflow-hidden rounded-lg border border-border bg-white">
-          <img
-            src={productImage(product)}
-            alt={product.name}
-            className="mx-auto max-h-[min(520px,70vh)] w-full object-contain p-6 sm:p-10"
-          />
+          <ProductMedia product={product} variant="detail" className="w-full" />
         </div>
 
         <div className="rounded-lg border border-border bg-background p-5 sm:p-6">
@@ -122,15 +146,24 @@ export function ProductDetailCommerce({ product, category }: ProductDetailCommer
 
           <div className="mt-4 flex items-start justify-between gap-4">
             <div>
-              <p className="text-3xl font-bold">{formatPriceByn(cardPrice.value)}</p>
-              <p className="mt-1 text-sm text-muted-foreground">/ {cardPrice.unitLabel}</p>
-              {dualUnit && product.pricePerUnit !== null ? (
+              <p className="text-3xl font-bold tracking-tight">{formatPriceByn(cardPrice.value)}</p>
+              {product.pricePerMeter != null && (dualUnit || isFiberglassRod(product)) ? (
+                <p className="mt-1 text-sm text-muted-foreground">/ м</p>
+              ) : ton !== null && byMeter ? (
                 <p className="mt-1 text-sm text-muted-foreground">
-                  {formatPrice(pricePerPackage)} / {unit}
+                  {formatPriceByn(pricePerMeterLine ?? unitPrice(product))} / м
                 </p>
-              ) : null}
-              {ton !== null && byMeter ? (
-                <p className="mt-1 text-sm text-muted-foreground">{formatPrice(ton)} / т</p>
+              ) : (
+                <p className="mt-1 text-sm text-muted-foreground">/ {cardPrice.unitLabel}</p>
+              )}
+              {dualUnit && product.pricePerUnit != null ? (
+                <p className="mt-1 text-sm text-muted-foreground">
+                  {formatPriceByn(pricePerPackage)} / {unit}
+                </p>
+              ) : isFiberglassRod(product) && product.pricePerUnit != null ? (
+                <p className="mt-1 text-sm text-muted-foreground">
+                  {formatPriceByn(product.pricePerUnit)} / {unit}
+                </p>
               ) : null}
             </div>
             <div className="flex gap-2 text-muted-foreground">
@@ -151,9 +184,11 @@ export function ProductDetailCommerce({ product, category }: ProductDetailCommer
             </div>
           </div>
 
-          <p className="mt-3 flex items-center gap-2 text-sm font-medium text-lime-deep">
-            <Check className="h-4 w-4" aria-hidden />
-            {product.stock === "in" ? "В наличии" : "Под заказ"}
+          <p className="mt-3 flex items-center gap-2 text-sm font-medium">
+            <Check className={`h-4 w-4 ${product.stock === "in" ? "text-lime-deep" : "text-muted-foreground"}`} aria-hidden />
+            <span className={stockStatusInlineClass(product.stock)}>
+              {stockStatusLabel(product.stock)}
+            </span>
           </p>
 
           <button
@@ -163,15 +198,57 @@ export function ProductDetailCommerce({ product, category }: ProductDetailCommer
             Нашли дешевле?
           </button>
 
+          {showRequest ? (
+            <div id="zayavka" className="mt-6 scroll-mt-28">
+              <p className="text-sm leading-relaxed text-muted-foreground">
+                Позиция поставляется под заказ — укажите объём и контакты, менеджер рассчитает срок и
+                стоимость.
+              </p>
+              <div className="mt-4 rounded-lg border border-border bg-secondary/30 p-4 sm:p-5">
+                <RequestForm
+                  compact
+                  source={`product-order:${product.slug}`}
+                  defaultMessage={productRequestDefaultMessage(product)}
+                />
+              </div>
+            </div>
+          ) : showCart ? (
+          <>
           <div className="mt-6 space-y-3">
             {byMeter && !dualUnit ? (
-              <QuantityStepper
-                value={qtyMeters}
-                step={step}
-                min={minQuantity(product)}
-                unitLabel="м"
-                onChange={setQtyMeters}
-              />
+              <>
+                <QuantityStepper
+                  value={qtyMeters}
+                  step={step}
+                  min={minQuantity(product)}
+                  unitLabel="м"
+                  onChange={setQtyMeters}
+                />
+                {ton !== null ? (
+                  <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+                    <span className="font-medium text-foreground">{formatQuantity(qtyMeters)}</span>
+                    <span>м</span>
+                    <span aria-hidden>≈</span>
+                    <input
+                      value={formatDecimal(Number(tonsFromMeters(qtyMeters).toFixed(3)))}
+                      onChange={(event) => {
+                        const parsed = Number(event.target.value.replace(",", "."));
+                        if (Number.isFinite(parsed) && product.weightKg > 0) {
+                          setQtyMeters(
+                            clampOrderQuantity(
+                              product,
+                              parsed / (product.weightKg / 1000),
+                            ),
+                          );
+                        }
+                      }}
+                      className="w-24 rounded-md border border-border px-2 py-1.5 text-center text-sm outline-none focus:border-lime-deep"
+                      aria-label="Масса, тонны"
+                    />
+                    <span>т</span>
+                  </div>
+                ) : null}
+              </>
             ) : dualUnit ? (
               <div className="flex flex-wrap items-center gap-3">
                 <div className="inline-flex items-center rounded-md border border-border">
@@ -215,13 +292,26 @@ export function ProductDetailCommerce({ product, category }: ProductDetailCommer
                 </div>
               </div>
             ) : (
-              <QuantityStepper
-                value={qtyUnits}
-                step={step}
-                min={minQuantity(product)}
-                unitLabel={unit}
-                onChange={setQtyUnits}
-              />
+              <>
+                <QuantityStepper
+                  value={qtyUnits}
+                  step={step}
+                  min={minQuantity(product)}
+                  unitLabel={unit}
+                  onChange={setQtyUnits}
+                />
+                {isFiberglassRod(product) && product.lengthM ? (
+                  <p className="text-sm text-muted-foreground">
+                    {formatQuantity(qtyUnits)} {unit}
+                    <span aria-hidden className="mx-2">
+                      ≈
+                    </span>
+                    <span className="font-medium text-foreground">
+                      {formatQuantity(qtyUnits * product.lengthM)} м
+                    </span>
+                  </p>
+                ) : null}
+              </>
             )}
 
             <p className="text-sm text-muted-foreground">
@@ -257,10 +347,22 @@ export function ProductDetailCommerce({ product, category }: ProductDetailCommer
               Купить в 1 клик
             </Link>
           </div>
+          </>
+          ) : (
+            <p className="mt-6 text-sm leading-relaxed text-muted-foreground">
+              Сейчас нет на складе — уточните наличие по телефону{" "}
+              <a href={PHONE_HREF} className="font-semibold text-lime-deep">
+                {PHONE_DISPLAY}
+              </a>
+              .
+            </p>
+          )}
 
+          {showCart ? (
           <p className="mt-4 text-xs leading-relaxed text-muted-foreground">
             {CATALOG_PRICE_DISCLAIMER}
           </p>
+          ) : null}
 
           <dl className="mt-6 divide-y divide-border rounded-lg border border-border text-sm">
             {specs.map(([label, value]) => (
@@ -279,6 +381,22 @@ export function ProductDetailCommerce({ product, category }: ProductDetailCommer
           </p>
         </div>
       </div>
+
+      <section className="mt-10 border-t border-border pt-8">
+        <h2 className="text-lg font-bold">Описание</h2>
+        <div className="prose prose-sm mt-4 max-w-3xl text-muted-foreground">
+          {category.id === "rebar-ribbed" || category.id === "rebar-smooth" ? (
+            <p>
+              {category.id === "rebar-ribbed"
+                ? "Рифлёная строительная арматура классов А400С и А500С — стержень круглого сечения с продольными и поперечными рёбрами для надёжного сцепления с бетоном."
+                : "Гладкая арматура и круглый прокат — для хомутов, распределительной сетки, монтажных элементов и гибких связей в железобетоне."}
+            </p>
+          ) : null}
+          <p className={category.id === "rebar-ribbed" || category.id === "rebar-smooth" ? "mt-3" : ""}>
+            {category.description}
+          </p>
+        </div>
+      </section>
     </div>
   );
 }

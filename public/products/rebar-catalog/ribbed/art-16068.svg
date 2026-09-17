@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 360" role="img" aria-label=" 8D;Q=0O 0@<0BC@0 Ø25">
+  <defs>
+    <linearGradient id="steel" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#eef0f3"/>
+      <stop offset="40%" stop-color="#a3a9b2"/>
+      <stop offset="100%" stop-color="#555c65"/>
+    </linearGradient>
+    <filter id="sh"><feDropShadow dx="0" dy="8" stdDeviation="6" flood-color="#111" flood-opacity=".25"/></filter>
+  </defs>
+  <rect width="520" height="360" fill="#ffffff"/>
+  <ellipse cx="280" cy="278" rx="120" ry="14" fill="#e8eaed" opacity=".85"/>
+  <g filter="url(#sh)" transform="translate(260 200) rotate(-28) translate(-170 -18)">
+    <rect width="340" height="36" rx="18" fill="url(#steel)"/>
+    <rect x="12" y="6" width="280" height="10" rx="5" fill="#fff" opacity=".35"/>
+    <g fill="#3d444c" opacity=".28">
+      <ellipse cx="28" cy="18" rx="4" ry="12"/><ellipse cx="44" cy="18" rx="4" ry="12"/><ellipse cx="60" cy="18" rx="4" ry="12"/>
+      <ellipse cx="76" cy="18" rx="4" ry="12"/><ellipse cx="92" cy="18" rx="4" ry="12"/><ellipse cx="108" cy="18" rx="4" ry="12"/>
+      <ellipse cx="124" cy="18" rx="4" ry="12"/><ellipse cx="140" cy="18" rx="4" ry="12"/><ellipse cx="156" cy="18" rx="4" ry="12"/>
+      <ellipse cx="172" cy="18" rx="4" ry="12"/><ellipse cx="188" cy="18" rx="4" ry="12"/><ellipse cx="204" cy="18" rx="4" ry="12"/>
+      <ellipse cx="220" cy="18" rx="4" ry="12"/><ellipse cx="236" cy="18" rx="4" ry="12"/><ellipse cx="252" cy="18" rx="4" ry="12"/>
+      <ellipse cx="268" cy="18" rx="4" ry="12"/><ellipse cx="284" cy="18" rx="4" ry="12"/><ellipse cx="300" cy="18" rx="4" ry="12"/>
+      <ellipse cx="316" cy="18" rx="4" ry="12"/>
+    </g>
+    <ellipse cx="338" cy="18" rx="18" ry="18" fill="#6a717a"/>
+    <ellipse cx="336" cy="18" rx="10" ry="10" fill="#9aa1a9"/>
+  </g>
+</svg>

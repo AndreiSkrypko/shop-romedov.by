@@ -1,5 +1,5 @@
 import { CheckCircle2, Loader2 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { validateRequest } from "@/lib/request";
 import { sendRequest } from "@/lib/send-request";
@@ -10,11 +10,24 @@ const fieldClass =
 const labelClass =
   "font-display text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground";
 
-export function RequestForm({ source, compact = false }: { source: string; compact?: boolean }) {
+export function RequestForm({
+  source,
+  compact = false,
+  defaultMessage = "",
+}: {
+  source: string;
+  compact?: boolean;
+  /** Предзаполнение поля «Что нужно» (например, карточка товара под заказ). */
+  defaultMessage?: string;
+}) {
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [company, setCompany] = useState("");
-  const [message, setMessage] = useState("");
+  const [message, setMessage] = useState(defaultMessage);
+
+  useEffect(() => {
+    setMessage(defaultMessage);
+  }, [defaultMessage]);
   const [status, setStatus] = useState<"idle" | "sending" | "done">("idle");
   const [error, setError] = useState<string | null>(null);
 

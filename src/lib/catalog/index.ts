@@ -1,4 +1,12 @@
 import { CATEGORIES, CATEGORIES_BY_ORDER, findCategoryBySlug, getCategoryById } from "./categories";
+import {
+  fiberglassDiagramKind,
+  fiberglassPlaceholderSrc,
+  shouldShowFiberglassPlaceholder,
+} from "./fiberglass-visual";
+import { ribbedRebarCatalogImagePath } from "./ribbed-rebar-images";
+import { smoothRebarCatalogImagePath } from "./smooth-rebar-images";
+import { resolvePublicAssetUrl } from "@/lib/utils";
 import { PRODUCTS } from "./products";
 import {
   listProductsByCategory,
@@ -6,9 +14,21 @@ import {
   resolveProduct,
   resolveProductAsync,
 } from "./repository";
-import type { Category, CategoryId, Product, SaleUnit } from "./types";
+import type { Category, CategoryId, Product, SaleUnit, StockState } from "./types";
 
 export { CATEGORIES, CATEGORIES_BY_ORDER, findCategoryBySlug, getCategoryById };
+export {
+  findCategoryBySlugAsync,
+  getCategoryByIdAsync,
+  listCategoriesAsync,
+} from "./category-repository";
+export {
+  CatalogCategoriesProvider,
+  categoryFromList,
+  useCatalogCategories,
+  useProductCountByCategory,
+  useTotalPublishedProductCount,
+} from "./catalog-context";
 export { PRODUCTS };
 export {
   hydrateDbProductsForSlugs,
@@ -17,7 +37,15 @@ export {
   resolveProduct,
   resolveProductAsync,
 } from "./repository";
-export type { Category, CategoryId, Product, SaleUnit };
+export type { Category, CategoryId, Product, SaleUnit, StockState };
+export {
+  countSubcategoryProducts,
+  filterProductsBySubcategory,
+  findSubcategory,
+  subcategoryBelongsToCategory,
+} from "./subcategories";
+export type { Subcategory } from "./subcategories";
+export { listSubcategoriesByCategoryAsync } from "./subcategory-repository";
 
 export function findProductBySlug(slug: string): Product | undefined {
   return resolveProduct(slug);
@@ -35,13 +63,25 @@ export async function getProductsByCategoryAsync(categoryId: CategoryId): Promis
   return listProductsByCategoryAsync(categoryId);
 }
 
-export function countProductsByCategory(categoryId: CategoryId): number {
-  return getProductsByCategory(categoryId).length;
-}
-
 export function productImage(product: Product): string {
-  if (product.image) return product.image;
-  return getCategoryById(product.categoryId).image;
+  const ribbedArt = ribbedRebarCatalogImagePath(product);
+  if (ribbedArt) return resolvePublicAssetUrl(ribbedArt);
+
+  const smoothArt = smoothRebarCatalogImagePath(product);
+  if (smoothArt) return resolvePublicAssetUrl(smoothArt);
+
+  if (shouldShowFiberglassPlaceholder(product)) {
+    return resolvePublicAssetUrl(fiberglassPlaceholderSrc(fiberglassDiagramKind(product)));
+  }
+
+  const img = product.image?.trim();
+  if (img) return resolvePublicAssetUrl(img);
+
+  try {
+    return resolvePublicAssetUrl(getCategoryById(product.categoryId).image);
+  } catch {
+    return resolvePublicAssetUrl("/products/supplies.webp");
+  }
 }
 
 export function productCardTitle(product: Product): string {
@@ -53,12 +93,13 @@ export function catalogCardPrice(product: Product): { value: number; unitLabel: 
   if (product.pricePerMeter != null) {
     return { value: product.pricePerMeter, unitLabel: "м" };
   }
+  if (product.pricePerTon != null) {
+    return { value: product.pricePerTon, unitLabel: "т" };
+  }
   return { value: unitPrice(product), unitLabel: saleUnitLabel(product.saleUnit) };
 }
 
-export function getPopularProducts(limit = 8): Product[] {
-  return PRODUCTS.filter((product) => product.popular).slice(0, limit);
-}
+export { fetchPopularProductsFromSupabase as getPopularProductsAsync } from "@/lib/supabase/queries";
 
 /** Похожие позиции из той же категории — для карточки товара. */
 export function getRelatedProducts(product: Product, peers: Product[], limit = 4): Product[] {
@@ -77,6 +118,7 @@ export function getRelatedProducts(product: Product, peers: Product[], limit = 4
 export function unitPrice(product: Product): number {
   if (product.pricePerUnit !== null) return product.pricePerUnit;
   if (product.pricePerTon !== null) return (product.weightKg / 1000) * product.pricePerTon;
+  if (product.pricePerMeter != null) return product.pricePerMeter;
   return 0;
 }
 
@@ -93,13 +135,78 @@ export function lineTotal(product: Product, quantity: number): number {
   return unitPrice(product) * quantity;
 }
 
-/** Минимальный шаг заказа: метраж кратен 0,1 м, штучное — целыми. */
+/** Шаг заказа: метраж целыми метрами, штучное — целыми единицами. */
 export function quantityStep(product: Product): number {
-  return product.saleUnit === "м" ? 0.5 : 1;
+  return 1;
 }
 
 export function minQuantity(product: Product): number {
-  return quantityStep(product);
+  return 1;
+}
+
+/** Округляет количество до допустимого шага (минимум 1). */
+export function clampOrderQuantity(product: Product, quantity: number): number {
+  const step = quantityStep(product);
+  const min = minQuantity(product);
+  if (!Number.isFinite(quantity)) return min;
+  return Math.max(min, Math.round(quantity / step) * step);
+}
+
+export function stockStatusLabel(stock: StockState): string {
+  switch (stock) {
+    case "in":
+      return "В наличии";
+    case "out":
+      return "Нет в наличии";
+    case "order":
+      return "Под заказ";
+  }
+}
+
+/** CSS-классы бейджа наличия на витрине. */
+export function stockStatusBadgeClass(stock: StockState): string {
+  switch (stock) {
+    case "in":
+      return "bg-lime/20 text-lime-deep";
+    case "out":
+      return "bg-destructive/10 text-destructive";
+    case "order":
+      return "bg-secondary text-muted-foreground";
+  }
+}
+
+export function stockStatusInlineClass(stock: StockState): string {
+  switch (stock) {
+    case "in":
+      return "font-medium text-lime-deep";
+    case "out":
+      return "font-medium text-destructive";
+    case "order":
+      return "font-medium text-amber-800 dark:text-amber-200";
+  }
+}
+
+export function isProductInStock(product: Product): boolean {
+  return product.stock === "in";
+}
+
+export function productIsOnOrder(product: Product): boolean {
+  return product.stock === "order";
+}
+
+/** Корзина только для «В наличии» и при указанной цене. */
+export function canAddProductToCart(product: Product): boolean {
+  if (!isProductInStock(product)) return false;
+  return (
+    product.pricePerMeter != null ||
+    product.pricePerTon != null ||
+    product.pricePerUnit != null
+  );
+}
+
+export function productRequestDefaultMessage(product: Product): string {
+  const sizePart = product.size ? `, ${product.size}` : "";
+  return `Интересует: ${product.name}${sizePart}. Объём и срок поставки: `;
 }
 
 export function saleUnitLabel(unit: SaleUnit): string {
@@ -117,9 +224,18 @@ export function saleUnitLabel(unit: SaleUnit): string {
   }
 }
 
+/** Подпись единицы на витрине (бухта / пруток для композитной арматуры). */
+export function saleUnitLabelForProduct(product: Product): string {
+  if (product.categoryId === "fiberglass-rebar") {
+    if (product.saleUnit === "боб") return "бухта";
+    if (product.saleUnit === "шт") return "пруток";
+  }
+  return saleUnitLabel(product.saleUnit);
+}
+
 /** «кг/м», «кг/лист» — подпись к удельному весу. */
 export function weightUnitLabel(product: Product): string {
-  return `кг/${saleUnitLabel(product.saleUnit)}`;
+  return `кг/${saleUnitLabelForProduct(product)}`;
 }
 
 // --- Форматирование ---------------------------------------------------------
@@ -218,6 +334,9 @@ export function sortProducts(products: Product[], sort: SortKey): Product[] {
     case "popular":
       return sorted.sort((a, b) => {
         if (a.popular !== b.popular) return a.popular ? -1 : 1;
+        const ao = a.catalogSort ?? a.dimension;
+        const bo = b.catalogSort ?? b.dimension;
+        if (ao !== bo) return ao - bo;
         return a.dimension - b.dimension;
       });
   }
@@ -250,17 +369,35 @@ function searchInProductList(products: Product[], query: string, limit: number):
 }
 
 export function searchProducts(query: string, limit = 24): Product[] {
-  return searchInProductList(PRODUCTS, query, limit);
+  return searchInProductList([], query, limit);
 }
 
-export function searchProductsMerged(
-  staticProducts: Product[],
-  dbProducts: Product[],
+export function searchProductsInList(
+  products: Product[],
+  categories: Category[],
   query: string,
   limit = 24,
 ): Product[] {
-  const bySlug = new Map<string, Product>();
-  for (const product of staticProducts) bySlug.set(product.slug, product);
-  for (const product of dbProducts) bySlug.set(product.slug, product);
-  return searchInProductList([...bySlug.values()], query, limit);
+  const categoryNameById = new Map(categories.map((c) => [c.id, c.name]));
+  const needle = query.trim().toLowerCase();
+  if (needle.length < 2) return [];
+
+  const words = needle.split(/\s+/);
+
+  return products
+    .filter((product) => {
+      const haystack = [
+        product.name,
+        product.size,
+        product.steel,
+        product.gost,
+        product.article ?? "",
+        categoryNameById.get(product.categoryId) ?? "",
+      ]
+        .join(" ")
+        .toLowerCase();
+
+      return words.every((word) => haystack.includes(word));
+    })
+    .slice(0, limit);
 }

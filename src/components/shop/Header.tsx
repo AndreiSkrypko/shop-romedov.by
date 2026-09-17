@@ -2,10 +2,11 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { Menu, Search, ShoppingCart, X } from "lucide-react";
 import { useEffect, useState } from "react";
 
+import { CatalogNavDropdown } from "@/components/shop/CatalogNavDropdown";
 import { Logo } from "@/components/shop/Logo";
 import { MailIcon, PhoneIcon, TelegramIcon, ViberIcon } from "@/components/shop/icons";
 import { useCart } from "@/lib/cart-context";
-import { CATEGORIES_BY_ORDER, formatPriceCompact } from "@/lib/catalog";
+import { formatPriceCompact, useCatalogCategories } from "@/lib/catalog";
 import {
   EMAIL_HREF,
   PHONES,
@@ -18,7 +19,6 @@ import {
 import { MAIN_SITE_URL, SHOW_PRICES } from "@/lib/site";
 
 const SHOP_NAV = [
-  { to: "/catalog", label: "Каталог" },
   { to: "/delivery", label: "Доставка и оплата" },
   { to: "/contacts", label: "Контакты" },
 ] as const;
@@ -38,6 +38,7 @@ const CHANNELS = [
 ];
 
 export function Header() {
+  const categories = useCatalogCategories();
   const [menuOpen, setMenuOpen] = useState(false);
   const [query, setQuery] = useState("");
   const navigate = useNavigate();
@@ -84,6 +85,7 @@ export function Header() {
         </Link>
 
         <nav className="hidden items-center gap-6 xl:flex">
+          <CatalogNavDropdown />
           {SHOP_NAV.map((item) => (
             <Link
               key={item.to}
@@ -150,22 +152,6 @@ export function Header() {
         </button>
       </div>
 
-      {/* Полоса категорий */}
-      <div className="hidden border-t border-border bg-secondary/50 xl:block">
-        <div className="no-scrollbar mx-auto flex max-w-7xl items-center gap-5 overflow-x-auto px-5 py-2.5 lg:px-8">
-          {CATEGORIES_BY_ORDER.map((category) => (
-            <Link
-              key={category.id}
-              to="/catalog/$category"
-              params={{ category: category.slug }}
-              className="whitespace-nowrap text-xs font-medium text-muted-foreground transition-colors hover:text-lime-deep"
-            >
-              {category.menuName}
-            </Link>
-          ))}
-        </div>
-      </div>
-
       {/* Мобильное меню */}
       {menuOpen ? (
         <div className="max-h-[calc(100vh-5rem)] overflow-y-auto border-t border-border bg-background px-5 pb-8 pt-4 xl:hidden">
@@ -186,6 +172,13 @@ export function Header() {
           </form>
 
           <nav className="mt-5 flex flex-col">
+            <Link
+              to="/catalog"
+              onClick={() => setMenuOpen(false)}
+              className="border-b border-border py-3.5 font-display text-base font-medium uppercase tracking-wide"
+            >
+              Каталог
+            </Link>
             {SHOP_NAV.map((item) => (
               <Link
                 key={item.to}
@@ -198,22 +191,35 @@ export function Header() {
             ))}
           </nav>
 
-          <p className="mt-6 font-display text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-            Категории
-          </p>
-          <div className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2.5">
-            {CATEGORIES_BY_ORDER.map((category) => (
-              <Link
-                key={category.id}
-                to="/catalog/$category"
-                params={{ category: category.slug }}
-                onClick={() => setMenuOpen(false)}
-                className="text-sm text-muted-foreground transition-colors hover:text-lime-deep"
-              >
-                {category.menuName}
-              </Link>
-            ))}
-          </div>
+          <label className="mt-6 block">
+            <span className="font-display text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+              Раздел каталога
+            </span>
+            <select
+              className="mt-2 w-full rounded-xl border border-border bg-background px-3 py-3 text-sm outline-none focus:border-lime-deep"
+              defaultValue=""
+              onChange={(event) => {
+                const value = event.target.value;
+                if (!value) return;
+                setMenuOpen(false);
+                if (value === "__all__") {
+                  navigate({ to: "/catalog" });
+                  return;
+                }
+                navigate({ to: "/catalog/$category", params: { category: value } });
+              }}
+            >
+              <option value="" disabled>
+                Выберите категорию…
+              </option>
+              <option value="__all__">Весь каталог</option>
+              {categories.map((category) => (
+                <option key={category.id} value={category.slug}>
+                  {category.menuName}
+                </option>
+              ))}
+            </select>
+          </label>
 
           <p className="mt-6 font-display text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
             Основной сайт
@@ -226,15 +232,18 @@ export function Header() {
             ))}
           </div>
 
-          <div className="mt-6 space-y-1.5">
+          <div className="mt-6 space-y-3">
             {PHONES.map((phone) => (
-              <a
-                key={phone.href}
-                href={phone.href}
-                className="block font-display text-lg font-semibold"
-              >
-                {phone.display}
-              </a>
+              <div key={phone.href}>
+                {phone.label ? (
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+                    {phone.label}
+                  </p>
+                ) : null}
+                <a href={phone.href} className="mt-0.5 block font-display text-lg font-semibold">
+                  {phone.display}
+                </a>
+              </div>
             ))}
           </div>
 

@@ -49,7 +49,7 @@ export const ORGANIZATION_LD: Record<string, unknown> = {
   name: SITE_NAME,
   legalName: "ООО «Ромедов»",
   url: SITE_URL,
-  telephone: "+375339118484",
+  telephone: "+375333995773",
   email: "info@romedov.by",
   address: {
     "@type": "PostalAddress",

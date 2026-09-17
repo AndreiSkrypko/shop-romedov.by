@@ -1,15 +1,19 @@
-import { createFileRoute, notFound } from "@tanstack/react-router";
+import { Link, createFileRoute, notFound } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 
 import { CatalogSortBar } from "@/components/shop/CatalogSortBar";
 import { CatalogStorefrontLayout } from "@/components/shop/CatalogStorefrontLayout";
+import { CatalogSubcategoryNav } from "@/components/shop/CatalogSubcategoryNav";
 import { ProductCardCatalog } from "@/components/shop/ProductCardCatalog";
 import {
   EMPTY_FILTERS,
   applyFilters,
-  findCategoryBySlug,
+  filterProductsBySubcategory,
+  findCategoryBySlugAsync,
+  findSubcategory,
   getProductsByCategoryAsync,
   getSteelOptions,
+  listSubcategoriesByCategoryAsync,
   unitPrice,
 } from "@/lib/catalog";
 import type { CatalogFilters } from "@/lib/catalog";
@@ -17,12 +21,22 @@ import { PHONE_DISPLAY, PHONE_HREF } from "@/lib/contacts";
 import { buildSeo } from "@/lib/seo";
 import { PRICE_NOTE } from "@/lib/site";
 
+type CategorySearch = {
+  sub?: string;
+};
+
 export const Route = createFileRoute("/catalog/$category")({
+  validateSearch: (search: Record<string, unknown>): CategorySearch => ({
+    sub: typeof search.sub === "string" && search.sub.length > 0 ? search.sub : undefined,
+  }),
   loader: async ({ params }) => {
-    const category = findCategoryBySlug(params.category);
+    const category = await findCategoryBySlugAsync(params.category);
     if (!category) throw notFound();
-    const products = await getProductsByCategoryAsync(category.id);
-    return { category, products };
+    const [products, subcategories] = await Promise.all([
+      getProductsByCategoryAsync(category.id),
+      listSubcategoriesByCategoryAsync(category.id),
+    ]);
+    return { category, products, subcategories };
   },
   head: ({ loaderData }) => {
     if (!loaderData) return {};
@@ -38,27 +52,33 @@ export const Route = createFileRoute("/catalog/$category")({
 });
 
 function CategoryPage() {
-  const { category, products } = Route.useLoaderData();
+  const { category, products, subcategories } = Route.useLoaderData();
+  const { sub: subSlug } = Route.useSearch();
+  const activeSub = findSubcategory(subcategories, subSlug);
+  const categoryProducts = useMemo(
+    () => filterProductsBySubcategory(products, activeSub),
+    [products, activeSub],
+  );
 
   const [filters, setFilters] = useState<CatalogFilters>(EMPTY_FILTERS);
   const [priceMin, setPriceMin] = useState(0);
   const [priceMax, setPriceMax] = useState(9999);
 
-  const steelOptions = useMemo(() => getSteelOptions(products), [products]);
+  const steelOptions = useMemo(() => getSteelOptions(categoryProducts), [categoryProducts]);
 
   const priceCeiling = useMemo(() => {
-    if (products.length === 0) return 100;
-    return Math.ceil(Math.max(...products.map((p) => unitPrice(p))) * 1.2);
-  }, [products]);
+    if (categoryProducts.length === 0) return 100;
+    return Math.ceil(Math.max(...categoryProducts.map((p) => unitPrice(p))) * 1.2);
+  }, [categoryProducts]);
 
   const filtered = useMemo(() => {
-    let list = applyFilters(products, filters);
+    let list = applyFilters(categoryProducts, filters);
     list = list.filter((p) => {
       const price = unitPrice(p);
       return price >= priceMin && price <= priceMax;
     });
     return list;
-  }, [products, filters, priceMin, priceMax]);
+  }, [categoryProducts, filters, priceMin, priceMax]);
 
   const resetSidebarFilters = () => {
     setFilters(EMPTY_FILTERS);
@@ -74,10 +94,17 @@ function CategoryPage() {
     <CatalogStorefrontLayout
       breadcrumbs={[
         { label: "Каталог", kind: "catalog" },
-        { label: category.name, kind: "current" },
+        ...(activeSub
+          ? ([
+              { label: category.name, kind: "category" as const, slug: category.slug },
+              { label: activeSub.name, kind: "current" as const },
+            ] as const)
+          : ([{ label: category.name, kind: "current" as const }] as const)),
       ]}
       title={category.name}
-      subtitle={category.description}
+      subtitle={
+        activeSub ? `${activeSub.name}. ${category.description}` : category.description
+      }
       activeCategoryId={category.id}
       showProductFilters
       steelOptions={steelOptions}
@@ -92,19 +119,48 @@ function CategoryPage() {
       jsonLdName={category.name}
       jsonLdPath={`/catalog/${category.slug}`}
     >
+      {subcategories.length > 0 ? (
+        <CatalogSubcategoryNav
+          category={category}
+          subcategories={subcategories}
+          activeSubSlug={activeSub?.slug}
+        />
+      ) : null}
+
       <CatalogSortBar
         filters={filters}
         onChange={setFilters}
         shown={filtered.length}
-        total={products.length}
+        total={categoryProducts.length}
       />
 
       {filtered.length === 0 ? (
         <div className="rounded-lg border border-dashed border-border p-10 text-center text-sm text-muted-foreground">
-          Нет товаров по выбранным фильтрам.{" "}
-          <a href={PHONE_HREF} className="text-lime-deep">
-            {PHONE_DISPLAY}
-          </a>
+          {activeSub ? (
+            <>
+              В подкатегории «{activeSub.name}» пока нет товаров — назначьте подкатегорию в{" "}
+              <Link to="/admin/products" className="text-lime-deep">
+                админке
+              </Link>{" "}
+              или{" "}
+              <Link
+                to="/catalog/$category"
+                params={{ category: category.slug }}
+                search={{}}
+                className="text-lime-deep"
+              >
+                смотрите всю категорию
+              </Link>
+              .
+            </>
+          ) : (
+            <>
+              Нет товаров по выбранным фильтрам.{" "}
+              <a href={PHONE_HREF} className="text-lime-deep">
+                {PHONE_DISPLAY}
+              </a>
+            </>
+          )}
         </div>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">

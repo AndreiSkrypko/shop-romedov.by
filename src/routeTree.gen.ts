@@ -15,6 +15,12 @@ import { Route as CheckoutRouteImport } from './routes/checkout'
 import { Route as ContactsRouteImport } from './routes/contacts'
 import { Route as DeliveryRouteImport } from './routes/delivery'
 import { Route as SearchRouteImport } from './routes/search'
+import { Route as AdminIndexRouteImport } from './routes/admin.index'
+import { Route as AdminCategoriesRouteImport } from './routes/admin.categories'
+import { Route as AdminHelpRouteImport } from './routes/admin.help'
+import { Route as AdminLoginRouteImport } from './routes/admin.login'
+import { Route as AdminProductsRouteImport } from './routes/admin.products'
+import { Route as AdminSubcategoriesRouteImport } from './routes/admin.subcategories'
 import { Route as CatalogIndexRouteImport } from './routes/catalog.index'
 import { Route as CatalogCategoryRouteImport } from './routes/catalog.$category'
 import { Route as ProductSlugRouteImport } from './routes/product.$slug'
@@ -49,6 +55,36 @@ const SearchRoute = SearchRouteImport.update({
   path: '/search',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminIndexRoute = AdminIndexRouteImport.update({
+  id: '/admin/',
+  path: '/admin/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminCategoriesRoute = AdminCategoriesRouteImport.update({
+  id: '/admin/categories',
+  path: '/admin/categories',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminHelpRoute = AdminHelpRouteImport.update({
+  id: '/admin/help',
+  path: '/admin/help',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminLoginRoute = AdminLoginRouteImport.update({
+  id: '/admin/login',
+  path: '/admin/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminProductsRoute = AdminProductsRouteImport.update({
+  id: '/admin/products',
+  path: '/admin/products',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminSubcategoriesRoute = AdminSubcategoriesRouteImport.update({
+  id: '/admin/subcategories',
+  path: '/admin/subcategories',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CatalogIndexRoute = CatalogIndexRouteImport.update({
   id: '/catalog/',
   path: '/catalog/',
@@ -72,8 +108,14 @@ export interface FileRoutesByFullPath {
   '/contacts': typeof ContactsRoute
   '/delivery': typeof DeliveryRoute
   '/search': typeof SearchRoute
+  '/admin/categories': typeof AdminCategoriesRoute
+  '/admin/help': typeof AdminHelpRoute
+  '/admin/login': typeof AdminLoginRoute
+  '/admin/products': typeof AdminProductsRoute
+  '/admin/subcategories': typeof AdminSubcategoriesRoute
   '/catalog/$category': typeof CatalogCategoryRoute
   '/product/$slug': typeof ProductSlugRoute
+  '/admin/': typeof AdminIndexRoute
   '/catalog/': typeof CatalogIndexRoute
 }
 export interface FileRoutesByTo {
@@ -83,8 +125,14 @@ export interface FileRoutesByTo {
   '/contacts': typeof ContactsRoute
   '/delivery': typeof DeliveryRoute
   '/search': typeof SearchRoute
+  '/admin/categories': typeof AdminCategoriesRoute
+  '/admin/help': typeof AdminHelpRoute
+  '/admin/login': typeof AdminLoginRoute
+  '/admin/products': typeof AdminProductsRoute
+  '/admin/subcategories': typeof AdminSubcategoriesRoute
   '/catalog/$category': typeof CatalogCategoryRoute
   '/product/$slug': typeof ProductSlugRoute
+  '/admin': typeof AdminIndexRoute
   '/catalog': typeof CatalogIndexRoute
 }
 export interface FileRoutesById {
@@ -95,8 +143,14 @@ export interface FileRoutesById {
   '/contacts': typeof ContactsRoute
   '/delivery': typeof DeliveryRoute
   '/search': typeof SearchRoute
+  '/admin/categories': typeof AdminCategoriesRoute
+  '/admin/help': typeof AdminHelpRoute
+  '/admin/login': typeof AdminLoginRoute
+  '/admin/products': typeof AdminProductsRoute
+  '/admin/subcategories': typeof AdminSubcategoriesRoute
   '/catalog/$category': typeof CatalogCategoryRoute
   '/product/$slug': typeof ProductSlugRoute
+  '/admin/': typeof AdminIndexRoute
   '/catalog/': typeof CatalogIndexRoute
 }
 export interface FileRouteTypes {
@@ -108,8 +162,14 @@ export interface FileRouteTypes {
     | '/contacts'
     | '/delivery'
     | '/search'
+    | '/admin/categories'
+    | '/admin/help'
+    | '/admin/login'
+    | '/admin/products'
+    | '/admin/subcategories'
     | '/catalog/$category'
     | '/product/$slug'
+    | '/admin/'
     | '/catalog/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -119,8 +179,14 @@ export interface FileRouteTypes {
     | '/contacts'
     | '/delivery'
     | '/search'
+    | '/admin/categories'
+    | '/admin/help'
+    | '/admin/login'
+    | '/admin/products'
+    | '/admin/subcategories'
     | '/catalog/$category'
     | '/product/$slug'
+    | '/admin'
     | '/catalog'
   id:
     | '__root__'
@@ -130,8 +196,14 @@ export interface FileRouteTypes {
     | '/contacts'
     | '/delivery'
     | '/search'
+    | '/admin/categories'
+    | '/admin/help'
+    | '/admin/login'
+    | '/admin/products'
+    | '/admin/subcategories'
     | '/catalog/$category'
     | '/product/$slug'
+    | '/admin/'
     | '/catalog/'
   fileRoutesById: FileRoutesById
 }
@@ -142,8 +214,14 @@ export interface RootRouteChildren {
   ContactsRoute: typeof ContactsRoute
   DeliveryRoute: typeof DeliveryRoute
   SearchRoute: typeof SearchRoute
+  AdminCategoriesRoute: typeof AdminCategoriesRoute
+  AdminHelpRoute: typeof AdminHelpRoute
+  AdminLoginRoute: typeof AdminLoginRoute
+  AdminProductsRoute: typeof AdminProductsRoute
+  AdminSubcategoriesRoute: typeof AdminSubcategoriesRoute
   CatalogCategoryRoute: typeof CatalogCategoryRoute
   ProductSlugRoute: typeof ProductSlugRoute
+  AdminIndexRoute: typeof AdminIndexRoute
   CatalogIndexRoute: typeof CatalogIndexRoute
 }
 
@@ -191,6 +269,48 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SearchRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/': {
+      id: '/admin/'
+      path: '/admin'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AdminIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/categories': {
+      id: '/admin/categories'
+      path: '/admin/categories'
+      fullPath: '/admin/categories'
+      preLoaderRoute: typeof AdminCategoriesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/help': {
+      id: '/admin/help'
+      path: '/admin/help'
+      fullPath: '/admin/help'
+      preLoaderRoute: typeof AdminHelpRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/login': {
+      id: '/admin/login'
+      path: '/admin/login'
+      fullPath: '/admin/login'
+      preLoaderRoute: typeof AdminLoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/products': {
+      id: '/admin/products'
+      path: '/admin/products'
+      fullPath: '/admin/products'
+      preLoaderRoute: typeof AdminProductsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/subcategories': {
+      id: '/admin/subcategories'
+      path: '/admin/subcategories'
+      fullPath: '/admin/subcategories'
+      preLoaderRoute: typeof AdminSubcategoriesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/catalog/': {
       id: '/catalog/'
       path: '/catalog'
@@ -222,8 +342,14 @@ const rootRouteChildren: RootRouteChildren = {
   ContactsRoute: ContactsRoute,
   DeliveryRoute: DeliveryRoute,
   SearchRoute: SearchRoute,
+  AdminCategoriesRoute: AdminCategoriesRoute,
+  AdminHelpRoute: AdminHelpRoute,
+  AdminLoginRoute: AdminLoginRoute,
+  AdminProductsRoute: AdminProductsRoute,
+  AdminSubcategoriesRoute: AdminSubcategoriesRoute,
   CatalogCategoryRoute: CatalogCategoryRoute,
   ProductSlugRoute: ProductSlugRoute,
+  AdminIndexRoute: AdminIndexRoute,
   CatalogIndexRoute: CatalogIndexRoute,
 }
 export const routeTree = rootRouteImport

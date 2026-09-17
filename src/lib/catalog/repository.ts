@@ -6,60 +6,48 @@ import {
 } from "@/lib/supabase/queries";
 
 import { getCachedDbProduct, rememberDbProducts } from "./db-cache";
-import { PRODUCTS } from "./products";
 import type { CategoryId, Product } from "./types";
 
-const STATIC_BY_SLUG = new Map<string, Product>(PRODUCTS.map((item) => [item.slug, item]));
-
 export function getStaticProductSlugs(): string[] {
-  return PRODUCTS.map((p) => p.slug);
+  return [];
 }
 
-/** Все slug для пререндера и sitemap (статика; Supabase дополняется при сборке). */
+/** Slug товаров для пререндера и sitemap (только Supabase). */
 export function getAllProductSlugs(): string[] {
-  return getStaticProductSlugs();
+  return [];
 }
 
 export { fetchSupabaseProductSlugs };
 
 export function resolveProduct(slug: string): Product | undefined {
-  const cached = getCachedDbProduct(slug);
-  if (cached) return cached;
-  return STATIC_BY_SLUG.get(slug);
+  return getCachedDbProduct(slug);
 }
 
 export async function resolveProductAsync(slug: string): Promise<Product | undefined> {
-  const staticProduct = STATIC_BY_SLUG.get(slug);
-  if (staticProduct) return staticProduct;
-
   const cached = getCachedDbProduct(slug);
   if (cached) return cached;
 
   const fromDb = await fetchProductBySlugFromSupabase(slug);
-  if (fromDb) rememberDbProducts([fromDb]);
-  return fromDb;
+  if (fromDb) {
+    rememberDbProducts([fromDb]);
+    return fromDb;
+  }
+
+  return undefined;
 }
 
-export function listProductsByCategory(categoryId: CategoryId): Product[] {
-  return PRODUCTS.filter((product) => product.categoryId === categoryId);
+export function listProductsByCategory(_categoryId: CategoryId): Product[] {
+  return [];
 }
 
 export async function listProductsByCategoryAsync(categoryId: CategoryId): Promise<Product[]> {
   const fromDb = await fetchProductsByCategoryFromSupabase(categoryId);
   rememberDbProducts(fromDb);
-
-  const dbSlugs = new Set(fromDb.map((item) => item.slug));
-  const staticRest = PRODUCTS.filter(
-    (product) => product.categoryId === categoryId && !dbSlugs.has(product.slug),
-  );
-
-  return [...fromDb, ...staticRest];
+  return fromDb;
 }
 
 export async function hydrateDbProductsForSlugs(slugs: string[]): Promise<void> {
-  const missing = slugs.filter(
-    (slug) => !STATIC_BY_SLUG.has(slug) && !getCachedDbProduct(slug),
-  );
+  const missing = slugs.filter((slug) => !getCachedDbProduct(slug));
   if (missing.length === 0) return;
 
   const fromDb = await fetchProductsBySlugsFromSupabase(missing);

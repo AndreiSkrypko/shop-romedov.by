@@ -6,11 +6,12 @@ import { Shell } from "@/components/shop/Shell";
 import {
   findProductBySlugAsync,
   formatDecimal,
-  getCategoryById,
+  getCategoryByIdAsync,
   getProductsByCategoryAsync,
   getRelatedProducts,
   productImage,
   saleUnitLabel,
+  stockStatusLabel,
 } from "@/lib/catalog";
 import { buildSeo, jsonLd } from "@/lib/seo";
 import { SITE_URL } from "@/lib/site";
@@ -20,7 +21,7 @@ export const Route = createFileRoute("/product/$slug")({
     const product = await findProductBySlugAsync(params.slug);
     if (!product) throw notFound();
     const peers = await getProductsByCategoryAsync(product.categoryId);
-    return { product, category: getCategoryById(product.categoryId), peers };
+    return { product, category: await getCategoryByIdAsync(product.categoryId), peers };
   },
   head: ({ loaderData }) => {
     if (!loaderData) return {};
@@ -29,7 +30,7 @@ export const Route = createFileRoute("/product/$slug")({
       title: `${product.name} — купить в Минске и Борисове | Ромедов`,
       description: `${product.name}, ${product.gost}. Вес ${formatDecimal(product.weightKg)} кг/${saleUnitLabel(product.saleUnit)}${
         product.lengthM !== null ? `, длина ${formatDecimal(product.lengthM)} м` : ""
-      }. ${product.stock === "in" ? "В наличии на складе" : "Поставка под заказ"}, резка в размер, доставка по Беларуси.`,
+      }. ${stockStatusLabel(product.stock)}, резка в размер, доставка по Беларуси.`,
       path: `/product/${product.slug}`,
       keywords: `${product.name.toLowerCase()}, ${category.name.toLowerCase()}, ${product.steel.toLowerCase()}, цена, минск`,
     });

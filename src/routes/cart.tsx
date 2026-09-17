@@ -9,8 +9,10 @@ import {
   formatDecimal,
   formatPrice,
   formatWeight,
-  getCategoryById,
+  categoryFromList,
   minQuantity,
+  productImage,
+  useCatalogCategories,
   quantityStep,
   saleUnitLabel,
   unitPrice,
@@ -31,6 +33,7 @@ export const Route = createFileRoute("/cart")({
 });
 
 function CartPage() {
+  const categories = useCatalogCategories();
   const { ready, entries, positions, totalPrice, totalWeightKg, setQuantity, remove, clear } =
     useCart();
 
@@ -75,7 +78,7 @@ function CartPage() {
             <ul className="space-y-4">
               {entries.map((entry) => {
                 const { product } = entry;
-                const category = getCategoryById(product.categoryId);
+                const category = categoryFromList(categories, product.categoryId);
                 const unit = saleUnitLabel(product.saleUnit);
 
                 return (
@@ -89,7 +92,7 @@ function CartPage() {
                       className="h-20 w-20 shrink-0 overflow-hidden rounded-xl border border-border bg-white"
                     >
                       <img
-                        src={category.image}
+                        src={productImage(product)}
                         alt={product.name}
                         className="h-full w-full object-contain p-1.5"
                       />
@@ -97,7 +100,7 @@ function CartPage() {
 
                     <div className="min-w-0 flex-1">
                       <p className="font-display text-[10px] font-semibold uppercase tracking-[0.16em] text-lime-deep">
-                        {category.name}
+                        {category?.name ?? "Каталог"}
                       </p>
                       <Link
                         to="/product/$slug"

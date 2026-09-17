@@ -2,7 +2,10 @@ import { Link, createFileRoute } from "@tanstack/react-router";
 import { Breadcrumbs } from "@/components/shop/Breadcrumbs";
 import { ProductCard } from "@/components/shop/ProductCard";
 import { Shell } from "@/components/shop/Shell";
-import { CATEGORIES_BY_ORDER, PRODUCTS, searchProductsMerged } from "@/lib/catalog";
+import { rememberDbProducts } from "@/lib/catalog/db-cache";
+import { searchProductsInList, useCatalogCategories } from "@/lib/catalog";
+import { listCategoriesAsync } from "@/lib/catalog/category-repository";
+import type { Product } from "@/lib/catalog";
 import { searchProductsInSupabase } from "@/lib/supabase/queries";
 import { PHONE_DISPLAY, PHONE_HREF } from "@/lib/contacts";
 import { buildSeo } from "@/lib/seo";
@@ -15,11 +18,15 @@ export const Route = createFileRoute("/search")({
   loader: async ({ deps }) => {
     const query = deps.q.trim();
     if (query.length < 2) {
-      return { results: [] as ReturnType<typeof searchProductsMerged> };
+      return { results: [] as Product[] };
     }
 
     const dbHits = await searchProductsInSupabase(query, 48);
-    return { results: searchProductsMerged(PRODUCTS, dbHits, query, 48) };
+    rememberDbProducts(dbHits);
+    const categories = await listCategoriesAsync();
+    return {
+      results: searchProductsInList(dbHits, categories, query, 48),
+    };
   },
   head: () =>
     buildSeo({
@@ -34,6 +41,7 @@ export const Route = createFileRoute("/search")({
 function SearchPage() {
   const { q } = Route.useSearch();
   const { results } = Route.useLoaderData();
+  const categories = useCatalogCategories();
   const query = q.trim();
 
   return (
@@ -62,7 +70,7 @@ function SearchPage() {
             </p>
 
             <div className="mt-6 flex flex-wrap justify-center gap-2.5">
-              {CATEGORIES_BY_ORDER.map((category) => (
+              {categories.map((category) => (
                 <Link
                   key={category.id}
                   to="/catalog/$category"

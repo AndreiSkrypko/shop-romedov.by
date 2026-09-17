@@ -8,7 +8,7 @@ import {
   hydrateDbProductsForSlugs,
   lineTotal,
   lineWeightKg,
-  minQuantity,
+  clampOrderQuantity,
 } from "@/lib/catalog";
 
 const STORAGE_KEY = "romedov-cart-v1";
@@ -67,7 +67,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const add = useCallback((slug: string, quantity: number) => {
     const product = findProductBySlug(slug);
     if (!product) return;
-    const amount = Math.max(minQuantity(product), quantity);
+    const amount = clampOrderQuantity(product, quantity);
 
     setLines((prev) => {
       const existing = prev.find((line) => line.slug === slug);
@@ -79,14 +79,16 @@ export function CartProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const setQuantity = useCallback((slug: string, quantity: number) => {
-    if (!findProductBySlug(slug)) return;
+    const product = findProductBySlug(slug);
+    if (!product) return;
 
     if (quantity <= 0) {
       setLines((prev) => prev.filter((line) => line.slug !== slug));
       return;
     }
 
-    setLines((prev) => prev.map((line) => (line.slug === slug ? { ...line, quantity } : line)));
+    const amount = clampOrderQuantity(product, quantity);
+    setLines((prev) => prev.map((line) => (line.slug === slug ? { ...line, quantity: amount } : line)));
   }, []);
 
   const remove = useCallback((slug: string) => {

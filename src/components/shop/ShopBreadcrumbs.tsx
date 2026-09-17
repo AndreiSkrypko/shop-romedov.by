@@ -25,7 +25,12 @@ export function ShopBreadcrumbs({ items }: { items: Crumb[] }) {
               Металлопрокат
             </Link>
           ) : item.kind === "category" ? (
-            <Link to="/catalog/$category" params={{ category: item.slug }} className={linkClass}>
+            <Link
+              to="/catalog/$category"
+              params={{ category: item.slug }}
+              search={{}}
+              className={linkClass}
+            >
               {item.label}
             </Link>
           ) : (

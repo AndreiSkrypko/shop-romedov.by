@@ -1,7 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { ArrowRight } from "lucide-react";
 
-import { countProductsByCategory } from "@/lib/catalog";
+import { useProductCountByCategory } from "@/lib/catalog";
 import type { Category } from "@/lib/catalog";
 
 function plural(count: number): string {
@@ -13,7 +13,7 @@ function plural(count: number): string {
 }
 
 export function CategoryCard({ category }: { category: Category }) {
-  const count = countProductsByCategory(category.id);
+  const count = useProductCountByCategory(category.id);
 
   return (
     <Link

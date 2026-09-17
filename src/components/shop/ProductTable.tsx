@@ -7,10 +7,14 @@ import { QuantityStepper } from "@/components/shop/QuantityStepper";
 import { useCart } from "@/lib/cart-context";
 import {
   formatDecimal,
+  canAddProductToCart,
   formatPrice,
   minQuantity,
+  productIsOnOrder,
   quantityStep,
   saleUnitLabel,
+  stockStatusBadgeClass,
+  stockStatusLabel,
   tonPrice,
   unitPrice,
 } from "@/lib/catalog";
@@ -70,10 +74,12 @@ export function ProductTable({
 function ProductRow({ product }: { product: Product }) {
   const { add } = useCart();
   const step = quantityStep(product);
-  const [quantity, setQuantity] = useState(step === 1 ? 1 : 10);
+  const [quantity, setQuantity] = useState(1);
   const [added, setAdded] = useState(false);
   const unit = saleUnitLabel(product.saleUnit);
   const ton = tonPrice(product);
+  const canAdd = canAddProductToCart(product);
+  const onOrder = productIsOnOrder(product);
 
   const handleAdd = () => {
     add(product.slug, quantity);
@@ -125,36 +131,48 @@ function ProductRow({ product }: { product: Product }) {
       <td className="px-3 py-3.5">
         <span
           className={`inline-flex rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider ${
-            product.stock === "in"
-              ? "bg-lime/20 text-lime-deep"
-              : "bg-secondary text-muted-foreground"
+            stockStatusBadgeClass(product.stock)
           }`}
         >
-          {product.stock === "in" ? "В наличии" : "Под заказ"}
+          {stockStatusLabel(product.stock)}
         </span>
       </td>
 
       <td className="px-3 py-3.5">
-        <div className="flex items-center justify-end gap-2">
-          <QuantityStepper
-            value={quantity}
-            step={step}
-            min={minQuantity(product)}
-            unitLabel={unit}
-            onChange={setQuantity}
-            size="sm"
-          />
-          <button
-            type="button"
-            onClick={handleAdd}
-            aria-label={`Добавить ${product.name} в корзину`}
-            className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition-colors ${
-              added ? "bg-lime text-ink" : "bg-brand text-brand-foreground hover:bg-brand/85"
-            }`}
+        {canAdd ? (
+          <div className="flex items-center justify-end gap-2">
+            <QuantityStepper
+              value={quantity}
+              step={step}
+              min={minQuantity(product)}
+              unitLabel={unit}
+              onChange={setQuantity}
+              size="sm"
+            />
+            <button
+              type="button"
+              onClick={handleAdd}
+              aria-label={`Добавить ${product.name} в корзину`}
+              className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition-colors ${
+                added ? "bg-lime text-ink" : "bg-brand text-brand-foreground hover:bg-brand/85"
+              }`}
+            >
+              {added ? <Check className="h-4 w-4" /> : <ShoppingCart className="h-4 w-4" />}
+            </button>
+          </div>
+        ) : onOrder ? (
+          <Link
+            to="/product/$slug"
+            params={{ slug: product.slug }}
+            hash="zayavka"
+            resetScroll={false}
+            className="inline-flex h-9 items-center justify-center rounded-full bg-brand px-4 text-[11px] font-semibold uppercase tracking-wide text-brand-foreground hover:bg-brand/90"
           >
-            {added ? <Check className="h-4 w-4" /> : <ShoppingCart className="h-4 w-4" />}
-          </button>
-        </div>
+            Заявка
+          </Link>
+        ) : (
+          <span className="text-xs text-muted-foreground">—</span>
+        )}
       </td>
     </tr>
   );

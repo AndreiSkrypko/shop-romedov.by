@@ -4,12 +4,11 @@ import viteReact from "@vitejs/plugin-react";
 import { nitro } from "nitro/vite";
 import { defineConfig } from "vite";
 
-import { CATEGORY_SLUGS, PRODUCT_SLUGS as STATIC_PRODUCT_SLUGS } from "./src/lib/catalog/slugs";
-import { fetchSupabaseProductSlugs } from "./src/lib/supabase/queries";
+import { fetchSupabaseCategorySlugs, fetchSupabaseProductSlugs } from "./src/lib/supabase/queries";
 
 export default defineConfig(async ({ command }) => {
-  const dbSlugs = command === "build" ? await fetchSupabaseProductSlugs() : [];
-  const productSlugs = [...new Set([...STATIC_PRODUCT_SLUGS, ...dbSlugs])];
+  const productSlugs = command === "build" ? await fetchSupabaseProductSlugs() : [];
+  const categorySlugs = command === "build" ? await fetchSupabaseCategorySlugs() : [];
 
   return {
     resolve: {
@@ -29,7 +28,11 @@ export default defineConfig(async ({ command }) => {
           { path: "/catalog", prerender: { enabled: true } },
           { path: "/delivery", prerender: { enabled: true } },
           { path: "/contacts", prerender: { enabled: true } },
-          ...CATEGORY_SLUGS.map((slug) => ({
+          { path: "/admin", prerender: { enabled: false } },
+          { path: "/admin/login", prerender: { enabled: false } },
+          { path: "/admin/categories", prerender: { enabled: false } },
+          { path: "/admin/products", prerender: { enabled: false } },
+          ...categorySlugs.map((slug) => ({
             path: `/catalog/${slug}`,
             prerender: { enabled: true },
           })),

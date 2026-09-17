@@ -12,6 +12,21 @@ npm run build    # пререндер в dist/ + sitemap.xml
 npm run lint     # eslint + prettier
 ```
 
+Админка (товары в Supabase): http://localhost:3000/admin/login — логин `admin`, пароль `romedov2026`.  
+Если таблица `products` уже была создана раньше, выполните в SQL Editor файл `scripts/supabase-admin-rpc.sql`.
+Для загрузки фото товаров в админке: `scripts/supabase-storage.sql` и **Secret key** в `.env` (`SUPABASE_SECRET_KEY`, см. `.env.example`).
+
+Каталог арматуры из Supabase (статика в коде убрана):
+
+- `scripts/supabase-seed-rebar-ribbed.sql` — рифлёная, 8 позиций
+- `scripts/supabase-rebar-ribbed-sync.sql` — обновить фото/порядок рифлёной в уже развёрнутой БД
+- `scripts/supabase-seed-rebar-smooth.sql` — гладкая, 7 позиций
+- `scripts/supabase-seed-fiberglass-rebar.sql` — стеклопластиковая, 7 позиций
+
+Обложки категорий: `public/products/rebar-catalog/*.webp` / `*.png`.
+
+Подкатегории (плитки над товарами): `scripts/supabase-subcategories.sql` — затем **Админка → Подкатегории** и поле «Подкатегория» в товаре.
+
 `npm run build` кладёт готовые статические файлы в `dist/` — их же можно заливать на
 Hoster.by. Для Vercel используется `npm run build:vercel` и `vercel.json`.
 

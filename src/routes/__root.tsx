@@ -11,6 +11,9 @@ import { type ReactNode } from "react";
 import { Toaster } from "sonner";
 
 import { CartProvider } from "@/lib/cart";
+import { CatalogCategoriesProvider } from "@/lib/catalog/catalog-context";
+import { listCategoriesAsync } from "@/lib/catalog/category-repository";
+import { fetchProductCountsByCategoryFromSupabase } from "@/lib/supabase/queries";
 import { SITE_NAME } from "@/lib/site";
 
 import appCss from "../styles.css?url";
@@ -82,6 +85,10 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
 }
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
+  loader: async () => ({
+    categories: await listCategoriesAsync(),
+    productCountByCategoryId: await fetchProductCountsByCategoryFromSupabase(),
+  }),
   head: () => ({
     meta: [
       { charSet: "utf-8" },
@@ -128,14 +135,20 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  const { categories, productCountByCategoryId } = Route.useLoaderData();
 
   return (
     <QueryClientProvider client={queryClient}>
-      <CartProvider>
-        {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-        <Outlet />
-        <Toaster position="bottom-right" richColors closeButton />
-      </CartProvider>
+      <CatalogCategoriesProvider
+        categories={categories}
+        productCountByCategoryId={productCountByCategoryId}
+      >
+        <CartProvider>
+          {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
+          <Outlet />
+          <Toaster position="bottom-right" richColors closeButton />
+        </CartProvider>
+      </CatalogCategoriesProvider>
     </QueryClientProvider>
   );
 }

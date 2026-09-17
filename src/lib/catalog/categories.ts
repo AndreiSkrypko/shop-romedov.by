@@ -1,184 +1,21 @@
+import { getCachedDbCategoryById, getCachedDbCategoryBySlug } from "./category-db-cache";
 import type { Category, CategoryId } from "./types";
 
-export const CATEGORIES: Category[] = [
-  {
-    id: "rebar-ribbed",
-    slug: "armatura-riflenaya",
-    name: "Арматура рифлёная",
-    menuName: "Арматура рифлёная",
-    tagline: "А500С, диаметры 6–32 мм",
-    description:
-      "Горячекатаная арматура периодического профиля класса А500С для армирования железобетонных конструкций. Мерная длина 11,7 м, рубка в размер по запросу.",
-    image: "/products/rebar-ribbed.webp",
-    order: 1,
-    dimensionLabel: "Диаметр",
-    seoTitle: "Арматура рифлёная А500С — купить в Минске и Борисове | Ромедов",
-    seoDescription:
-      "Арматура рифлёная А500С Ø6–32 мм по ГОСТ 34028-2016. Цена за тонну и за метр, наличие на складе, рубка в размер, доставка по Беларуси.",
-  },
-  {
-    id: "rebar-smooth",
-    slug: "armatura-gladkaya",
-    name: "Арматура гладкая",
-    menuName: "Арматура гладкая",
-    tagline: "А240 (А1), диаметры 6–20 мм",
-    description:
-      "Гладкая горячекатаная арматура класса А240 для хомутов, монтажных петель и распределительной сетки. Хорошо гнётся и сваривается.",
-    image: "/products/rebar-smooth.webp",
-    order: 2,
-    dimensionLabel: "Диаметр",
-    seoTitle: "Арматура гладкая А240 — цена, наличие | Ромедов",
-    seoDescription:
-      "Арматура гладкая А240 (А1) Ø6–20 мм по ГОСТ 34028-2016. Продажа тоннами и метрами, резка в размер, доставка по Минску и Беларуси.",
-  },
-  {
-    id: "fiberglass-rebar",
-    slug: "armatura-stekloplastikovaya",
-    name: "Арматура стеклопластиковая",
-    menuName: "Арматура композитная",
-    tagline: "АКП Ø4–16 мм, в прутках и бухтах",
-    description:
-      "Композитная арматура из стеклоровинга: в 4 раза легче стальной, не корродирует и не проводит тепло. Для фундаментов, стяжек, дорожных плит и гибких связей.",
-    image: "/products/fiberglass-rebar.webp",
-    order: 3,
-    dimensionLabel: "Диаметр",
-    seoTitle: "Стеклопластиковая арматура АКП — купить в Беларуси | Ромедов",
-    seoDescription:
-      "Композитная стеклопластиковая арматура АКП Ø4–16 мм. Цена за метр, прутки и бухты, доставка по Беларуси. Не корродирует, легче стальной в 4 раза.",
-  },
-  {
-    id: "sheet",
-    slug: "listy-stalnye",
-    name: "Листы стальные",
-    menuName: "Листы стальные",
-    tagline: "Горячекатаный, оцинкованный, нержавейка",
-    description:
-      "Листовой металл под раскрой и изготовление деталей: горячекатаный Ст3сп5, оцинкованный и нержавеющий AISI 304. Порежем в размер на лазере или гильотине.",
-    image: "/products/sheet.webp",
-    order: 4,
-    dimensionLabel: "Толщина",
-    seoTitle: "Лист стальной — горячекатаный, оцинкованный, нержавеющий | Ромедов",
-    seoDescription:
-      "Стальной лист г/к Ст3сп5, оцинкованный и нержавеющий AISI 304. Толщины 0,5–20 мм, резка в размер, лазерный раскрой, доставка по Беларуси.",
-  },
-  {
-    id: "pipe",
-    slug: "truby-stalnye",
-    name: "Трубы стальные",
-    menuName: "Трубы стальные",
-    tagline: "Профильные, круглые электросварные, ВГП",
-    description:
-      "Профильная труба для каркасов и навесов, круглая электросварная для конструкций и ВГП для водогазопроводных линий. Резка в размер бесплатно.",
-    image: "/products/pipe.webp",
-    order: 5,
-    dimensionLabel: "Сечение",
-    seoTitle: "Трубы стальные — профильная, круглая, ВГП | Ромедов",
-    seoDescription:
-      "Профильная, круглая электросварная и водогазопроводная труба. Цена за тонну и за метр, наличие, резка в размер, доставка по Минску и Беларуси.",
-  },
-  {
-    id: "angle",
-    slug: "ugolok-stalnoy",
-    name: "Уголок стальной",
-    menuName: "Уголок стальной",
-    tagline: "Равнополочный 25–100 мм",
-    description:
-      "Горячекатаный равнополочный уголок по ГОСТ 8509-93 для рам, обвязок, закладных и усиления конструкций. Мерная длина 6 и 11,7 м.",
-    image: "/products/angle.webp",
-    order: 6,
-    dimensionLabel: "Полка",
-    seoTitle: "Уголок стальной равнополочный — цена за тонну и метр | Ромедов",
-    seoDescription:
-      "Уголок стальной равнополочный 25×25 — 100×100 мм по ГОСТ 8509-93. Продажа тоннами и метрами, резка в размер, доставка по Беларуси.",
-  },
-  {
-    id: "channel",
-    slug: "shveller-stalnoy",
-    name: "Швеллер стальной",
-    menuName: "Швеллер стальной",
-    tagline: "П-образный, номера 5–20",
-    description:
-      "Горячекатаный швеллер с параллельными полками по ГОСТ 8240-97. Основа для перекрытий, рам, эстакад и тяжёлых металлоконструкций.",
-    image: "/products/channel.webp",
-    order: 7,
-    dimensionLabel: "Номер",
-    seoTitle: "Швеллер стальной — купить в Минске и Борисове | Ромедов",
-    seoDescription:
-      "Швеллер стальной горячекатаный № 5–20 по ГОСТ 8240-97. Цена за тонну и за метр, наличие на складе, резка, доставка по Беларуси.",
-  },
-  {
-    id: "square",
-    slug: "kvadrat-stalnoy",
-    name: "Квадрат стальной",
-    menuName: "Квадрат стальной",
-    tagline: "Горячекатаный 10–40 мм",
-    description:
-      "Стальной квадратный прокат для осей, кронштейнов, декоративной ковки и заготовок под мехобработку. Марка Ст3сп/пс, длина 6 м.",
-    image: "/products/square.webp",
-    order: 8,
-    dimensionLabel: "Сторона",
-    seoTitle: "Квадрат стальной горячекатаный — цена, наличие | Ромедов",
-    seoDescription:
-      "Квадрат стальной горячекатаный 10×10 — 40×40 мм по ГОСТ 2591-2006. Продажа тоннами и метрами, резка в размер, доставка по Беларуси.",
-  },
-  {
-    id: "strip",
-    slug: "polosa-stalnaya",
-    name: "Полоса стальная",
-    menuName: "Полоса стальная",
-    tagline: "Толщины 4–10 мм, ширины 20–100 мм",
-    description:
-      "Горячекатаная стальная полоса для обвязок, накладок, закладных деталей и ограждений. Ровная геометрия, готова к сварке и гибке.",
-    image: "/products/strip.webp",
-    order: 9,
-    dimensionLabel: "Сечение",
-    seoTitle: "Полоса стальная горячекатаная — купить в Беларуси | Ромедов",
-    seoDescription:
-      "Полоса стальная горячекатаная 20×4 — 100×10 мм по ГОСТ 103-2006. Цена за тонну и за метр, резка в размер, доставка по Минску и области.",
-  },
-  {
-    id: "mesh",
-    slug: "setka-armiruyushchaya",
-    name: "Сетка армирующая сварная",
-    menuName: "Сетка сварная",
-    tagline: "Карты 50×50 — 200×200 мм",
-    description:
-      "Сварная арматурная сетка в картах для стяжек, фундаментных плит, дорожек и кладки. Точный шаг ячейки и надёжные сварные узлы.",
-    image: "/products/mesh.webp",
-    order: 10,
-    dimensionLabel: "Ячейка",
-    seoTitle: "Сетка сварная армирующая в картах — цена | Ромедов",
-    seoDescription:
-      "Сварная арматурная сетка 50×50, 100×100, 150×150, 200×200 мм в картах. Цена за карту и за м², наличие, доставка по Беларуси.",
-  },
-  {
-    id: "supplies",
-    slug: "soputstvuyushchie-tovary",
-    name: "Сопутствующие товары",
-    menuName: "Сопутствующие товары",
-    tagline: "Крепёж, проволока, электроды, ЛКМ",
-    description:
-      "Всё, что нужно закрыть вместе с металлом: вязальная проволока, электроды, диски, анкеры и грунт-эмаль. Одна доставка на весь объект.",
-    image: "/products/supplies.webp",
-    order: 11,
-    dimensionLabel: "Типоразмер",
-    seoTitle: "Сопутствующие товары для металла — крепёж, электроды | Ромедов",
-    seoDescription:
-      "Вязальная проволока, электроды, отрезные диски, анкеры и грунт-эмаль. Доставим одной машиной вместе с металлопрокатом по Беларуси.",
-  },
-];
+/** Категории хранятся только в Supabase (см. scripts/supabase-seed-categories.sql). */
+export const CATEGORIES: Category[] = [];
 
-export const CATEGORIES_BY_ORDER = [...CATEGORIES].sort((a, b) => a.order - b.order);
-
-const CATEGORY_BY_ID = new Map<CategoryId, Category>(CATEGORIES.map((item) => [item.id, item]));
-const CATEGORY_BY_SLUG = new Map<string, Category>(CATEGORIES.map((item) => [item.slug, item]));
+export const CATEGORIES_BY_ORDER: Category[] = [];
 
 export function getCategoryById(id: CategoryId): Category {
-  const category = CATEGORY_BY_ID.get(id);
-  if (!category) throw new Error(`Unknown category id: ${id}`);
-  return category;
+  const cached = getCachedDbCategoryById(id);
+  if (cached) return cached;
+  throw new Error(`Unknown category id: ${id}`);
 }
 
 export function findCategoryBySlug(slug: string): Category | undefined {
-  return CATEGORY_BY_SLUG.get(slug);
+  return getCachedDbCategoryBySlug(slug);
+}
+
+export function getStaticCategorySlugs(): string[] {
+  return [];
 }

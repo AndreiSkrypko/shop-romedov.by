@@ -54,15 +54,21 @@ function ContactsPage() {
               <h2 className="font-display text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
                 Телефоны
               </h2>
-              <div className="mt-4 space-y-2">
+              <div className="mt-4 space-y-4">
                 {PHONES.map((phone) => (
-                  <a
-                    key={phone.href}
-                    href={phone.href}
-                    className="block font-display text-2xl font-semibold transition-colors hover:text-lime-deep"
-                  >
-                    {phone.display}
-                  </a>
+                  <div key={phone.href}>
+                    {phone.label ? (
+                      <p className="font-display text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                        {phone.label}
+                      </p>
+                    ) : null}
+                    <a
+                      href={phone.href}
+                      className="mt-1 block font-display text-2xl font-semibold transition-colors hover:text-lime-deep"
+                    >
+                      {phone.display}
+                    </a>
+                  </div>
                 ))}
               </div>
               <p className="mt-3 text-sm text-muted-foreground">{WORK_HOURS}</p>

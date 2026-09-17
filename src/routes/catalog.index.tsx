@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 
 import { CatalogStorefrontLayout } from "@/components/shop/CatalogStorefrontLayout";
 import { CategoryCard } from "@/components/shop/CategoryCard";
-import { CATEGORIES_BY_ORDER, PRODUCTS } from "@/lib/catalog";
+import { useCatalogCategories, useTotalPublishedProductCount } from "@/lib/catalog";
 import { buildSeo } from "@/lib/seo";
 
 export const Route = createFileRoute("/catalog/")({
@@ -19,14 +19,19 @@ export const Route = createFileRoute("/catalog/")({
 });
 
 function CatalogPage() {
+  const categories = useCatalogCategories();
+  const totalProducts = useTotalPublishedProductCount();
+
   return (
     <CatalogStorefrontLayout
       breadcrumbs={[{ label: "Металлопрокат", kind: "current" }]}
       title="Металлопрокат"
-      subtitle={`Выберите категорию — внутри полный сортамент с марками стали, ГОСТами и ценой за единицу. Всего в каталоге ${PRODUCTS.length} позиций.`}
+      subtitle={`Выберите категорию — внутри полный сортамент с марками стали, ГОСТами и ценой за единицу.${
+        totalProducts > 0 ? ` Всего в каталоге ${totalProducts} позиций.` : ""
+      }`}
     >
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-        {CATEGORIES_BY_ORDER.map((category) => (
+        {categories.map((category) => (
           <CategoryCard key={category.id} category={category} />
         ))}
       </div>

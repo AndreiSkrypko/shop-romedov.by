@@ -2,7 +2,7 @@ import { Link } from "@tanstack/react-router";
 
 import { Logo } from "@/components/shop/Logo";
 import { MailIcon, PhoneIcon, TelegramIcon, ViberIcon } from "@/components/shop/icons";
-import { CATEGORIES_BY_ORDER } from "@/lib/catalog";
+import { useCatalogCategories } from "@/lib/catalog";
 import {
   ADDRESS_LEGAL,
   ADDRESS_PRODUCTION,
@@ -25,6 +25,8 @@ const CHANNELS = [
 ];
 
 export function Footer() {
+  const categories = useCatalogCategories();
+
   return (
     <footer className="mt-auto bg-graphite py-14 text-background/70">
       <div className="mx-auto max-w-7xl px-5 lg:px-8">
@@ -48,7 +50,7 @@ export function Footer() {
               Каталог
             </p>
             <div className="mt-4 grid gap-x-6 gap-y-2.5 sm:grid-cols-2">
-              {CATEGORIES_BY_ORDER.map((category) => (
+              {categories.map((category) => (
                 <Link
                   key={category.id}
                   to="/catalog/$category"
@@ -65,15 +67,21 @@ export function Footer() {
             <p className="font-display text-[11px] font-semibold uppercase tracking-[0.2em] text-background/45">
               Контакты
             </p>
-            <div className="mt-4 space-y-1.5">
+            <div className="mt-4 space-y-3">
               {PHONES.map((phone) => (
-                <a
-                  key={phone.href}
-                  href={phone.href}
-                  className="block font-display text-lg text-background transition-colors hover:text-brand"
-                >
-                  {phone.display}
-                </a>
+                <div key={phone.href}>
+                  {phone.label ? (
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-background/45">
+                      {phone.label}
+                    </p>
+                  ) : null}
+                  <a
+                    href={phone.href}
+                    className="mt-0.5 block font-display text-lg text-background transition-colors hover:text-brand"
+                  >
+                    {phone.display}
+                  </a>
+                </div>
               ))}
             </div>
             <a href={EMAIL_HREF} className="mt-3 block text-sm transition-colors hover:text-brand">

@@ -11,14 +11,25 @@ import {
 } from "lucide-react";
 
 import { CategoryCard } from "@/components/shop/CategoryCard";
-import { ProductCard } from "@/components/shop/ProductCard";
+import { ProductCardCatalog } from "@/components/shop/ProductCardCatalog";
 import { Shell } from "@/components/shop/Shell";
-import { CATEGORIES_BY_ORDER, PRODUCTS, getPopularProducts } from "@/lib/catalog";
+import {
+  getPopularProductsAsync,
+  useCatalogCategories,
+  useTotalPublishedProductCount,
+} from "@/lib/catalog";
+import { rememberDbProducts } from "@/lib/catalog/db-cache";
 import { PHONES, PHONE_DISPLAY, PHONE_HREF } from "@/lib/contacts";
 import { ORGANIZATION_LD, buildSeo, jsonLd } from "@/lib/seo";
 import { MAIN_SITE_URL, PRICE_NOTE } from "@/lib/site";
 
 export const Route = createFileRoute("/")({
+  loader: async () => {
+    const popular = (await getPopularProductsAsync(8)).filter((product) => product.popular);
+    rememberDbProducts(popular);
+    return { popular };
+  },
+  staleTime: 0,
   head: () =>
     buildSeo({
       title: "Металлопрокат в Минске и Борисове — интернет-магазин Ромедов",
@@ -84,7 +95,9 @@ const STEPS = [
 ];
 
 function HomePage() {
-  const popular = getPopularProducts(8);
+  const { popular } = Route.useLoaderData();
+  const categories = useCatalogCategories();
+  const totalProducts = useTotalPublishedProductCount();
 
   return (
     <Shell>
@@ -94,8 +107,8 @@ function HomePage() {
           ...ORGANIZATION_LD,
           contactPoint: PHONES.map((phone) => ({
             "@type": "ContactPoint",
-            telephone: phone.display,
-            contactType: "sales",
+            telephone: phone.href.replace("tel:", ""),
+            contactType: phone.label ?? "customer service",
             areaServed: "BY",
             availableLanguage: ["ru", "be"],
           })),
@@ -120,7 +133,8 @@ function HomePage() {
             Металл со склада <span className="text-brand">с точным весом</span> и ценой на месте
           </h1>
           <p className="mt-6 max-w-2xl text-base leading-relaxed text-background/70 sm:text-lg">
-            {PRODUCTS.length} позиций арматуры, листа, трубы, уголка и швеллера. Вес метра, цена за
+            {totalProducts > 0 ? `${totalProducts} позиций` : "Сортамент"} арматуры, листа, трубы,
+            уголка и швеллера. Вес метра, цена за
             тонну и итог по вашему объёму видны прямо в каталоге — без переписки и ожидания прайса.
           </p>
 
@@ -143,7 +157,7 @@ function HomePage() {
 
           <dl className="mt-14 grid gap-8 border-t border-background/15 pt-8 sm:grid-cols-3 lg:max-w-3xl">
             {[
-              { value: "11", label: "категорий сортамента" },
+              { value: String(categories.length || "—"), label: "категорий сортамента" },
               { value: "30 мин", label: "подтверждение заказа" },
               { value: "20 т", label: "максимум за одну машину" },
             ].map((stat) => (
@@ -178,7 +192,7 @@ function HomePage() {
         </div>
 
         <div className="mt-9 grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {CATEGORIES_BY_ORDER.map((category) => (
+          {categories.map((category) => (
             <CategoryCard key={category.id} category={category} />
           ))}
         </div>
@@ -191,14 +205,33 @@ function HomePage() {
             Чаще всего заказывают
           </h2>
           <p className="mt-3 max-w-2xl text-sm leading-relaxed text-muted-foreground">
-            Ходовые типоразмеры, которые всегда есть на складе. {PRICE_NOTE}
+            Позиции с отметкой «Популярное» в админке — ходовой сортамент со склада. {PRICE_NOTE}
           </p>
 
-          <div className="mt-9 grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {popular.map((product) => (
-              <ProductCard key={product.slug} product={product} />
-            ))}
-          </div>
+          {popular.length === 0 ? (
+            <div className="mt-9 rounded-2xl border border-dashed border-border px-6 py-10 text-center text-sm text-muted-foreground">
+              <p className="font-display text-base font-semibold uppercase text-foreground">
+                Пока нет популярных позиций
+              </p>
+              <p className="mx-auto mt-2 max-w-md leading-relaxed">
+                Отметьте нужные товары в админке (галочка «На главной в блоке популярных») или откройте
+                полный каталог.
+              </p>
+              <Link
+                to="/catalog"
+                className="mt-5 inline-flex items-center gap-2 font-display text-xs font-semibold uppercase tracking-[0.12em] text-lime-deep"
+              >
+                Весь каталог
+                <ArrowRight className="h-3.5 w-3.5" />
+              </Link>
+            </div>
+          ) : (
+            <div className="mt-9 grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {popular.map((product) => (
+                <ProductCardCatalog key={product.slug} product={product} />
+              ))}
+            </div>
+          )}
         </div>
       </section>
 

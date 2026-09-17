@@ -8,9 +8,15 @@ import {
   formatDecimal,
   formatPrice,
   formatWeight,
-  getCategoryById,
+  canAddProductToCart,
+  categoryFromList,
   minQuantity,
+  productImage,
+  productIsOnOrder,
+  useCatalogCategories,
   saleUnitLabel,
+  stockStatusBadgeClass,
+  stockStatusLabel,
   tonPrice,
   unitPrice,
   weightUnitLabel,
@@ -19,11 +25,14 @@ import type { Product } from "@/lib/catalog";
 import { SHOW_PRICES } from "@/lib/site";
 
 export function ProductCard({ product }: { product: Product }) {
-  const category = getCategoryById(product.categoryId);
+  const categories = useCatalogCategories();
+  const category = categoryFromList(categories, product.categoryId);
   const { add } = useCart();
   const [justAdded, setJustAdded] = useState(false);
   const unit = saleUnitLabel(product.saleUnit);
   const ton = tonPrice(product);
+  const canAdd = canAddProductToCart(product);
+  const onOrder = productIsOnOrder(product);
 
   const handleAdd = () => {
     add(product.slug, minQuantity(product));
@@ -40,26 +49,22 @@ export function ProductCard({ product }: { product: Product }) {
         className="relative aspect-[4/3] overflow-hidden bg-white"
       >
         <img
-          src={category.image}
+          src={productImage(product)}
           alt={product.name}
           loading="lazy"
           decoding="async"
           className="h-full w-full object-contain p-4 transition-transform duration-500 group-hover:scale-[1.04]"
         />
         <span
-          className={`absolute left-3 top-3 rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider ${
-            product.stock === "in"
-              ? "bg-lime/20 text-lime-deep"
-              : "bg-secondary text-muted-foreground"
-          }`}
+          className={`absolute left-3 top-3 rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider ${stockStatusBadgeClass(product.stock)}`}
         >
-          {product.stock === "in" ? "В наличии" : "Под заказ"}
+          {stockStatusLabel(product.stock)}
         </span>
       </Link>
 
       <div className="flex flex-1 flex-col p-5">
         <p className="font-display text-[10px] font-semibold uppercase tracking-[0.18em] text-lime-deep">
-          {category.name}
+          {category?.menuName ?? category?.name ?? "Каталог"}
         </p>
 
         <h3 className="mt-2 font-display text-base font-semibold uppercase leading-snug">
@@ -113,23 +118,35 @@ export function ProductCard({ product }: { product: Product }) {
           </p>
         )}
 
-        <button
-          type="button"
-          onClick={handleAdd}
-          className={`mt-4 flex h-11 items-center justify-center gap-2 rounded-full font-display text-xs font-semibold uppercase tracking-[0.12em] transition-all ${
-            justAdded ? "bg-lime text-ink" : "bg-brand text-brand-foreground hover:-translate-y-0.5"
-          }`}
-        >
-          {justAdded ? (
-            <>
-              <Check className="h-4 w-4" /> В корзине
-            </>
-          ) : (
-            <>
-              <ShoppingCart className="h-4 w-4" /> В корзину
-            </>
-          )}
-        </button>
+        {canAdd ? (
+          <button
+            type="button"
+            onClick={handleAdd}
+            className={`mt-4 flex h-11 items-center justify-center gap-2 rounded-full font-display text-xs font-semibold uppercase tracking-[0.12em] transition-all ${
+              justAdded ? "bg-lime text-ink" : "bg-brand text-brand-foreground hover:-translate-y-0.5"
+            }`}
+          >
+            {justAdded ? (
+              <>
+                <Check className="h-4 w-4" /> В корзине
+              </>
+            ) : (
+              <>
+                <ShoppingCart className="h-4 w-4" /> В корзину
+              </>
+            )}
+          </button>
+        ) : onOrder ? (
+          <Link
+            to="/product/$slug"
+            params={{ slug: product.slug }}
+            hash="zayavka"
+            resetScroll={false}
+            className="mt-4 flex h-11 items-center justify-center rounded-full bg-brand font-display text-xs font-semibold uppercase tracking-[0.12em] text-brand-foreground transition-all hover:-translate-y-0.5"
+          >
+            Оставить заявку
+          </Link>
+        ) : null}
       </div>
     </article>
   );

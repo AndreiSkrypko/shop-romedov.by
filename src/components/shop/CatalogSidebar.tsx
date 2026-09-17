@@ -1,7 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { ChevronRight } from "lucide-react";
 
-import { CATEGORIES_BY_ORDER } from "@/lib/catalog";
+import { useCatalogCategories } from "@/lib/catalog";
 import type { CatalogFilters, Category, CategoryId } from "@/lib/catalog";
 
 type CatalogSidebarProps = {
@@ -35,6 +35,8 @@ export function CatalogSidebar({
   onPriceMaxChange,
   onResetFilters,
 }: CatalogSidebarProps) {
+  const categories = useCatalogCategories();
+
   const toggleSteel = (steel: string) => {
     if (!filters || !onFiltersChange) return;
     const next = filters.steel.includes(steel)
@@ -63,7 +65,7 @@ export function CatalogSidebar({
               <ChevronRight className="h-4 w-4 shrink-0 opacity-40" />
             </Link>
           </li>
-          {CATEGORIES_BY_ORDER.map((category: Category) => {
+          {categories.map((category: Category) => {
             const active = category.id === activeCategoryId;
             return (
               <li key={category.id}>

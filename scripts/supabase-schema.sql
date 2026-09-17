@@ -16,11 +16,12 @@ create table if not exists public.products (
   price_per_unit numeric,
   price_per_meter numeric,
   meters_per_sale_unit numeric,
-  stock text not null default 'in' check (stock in ('in', 'order')),
+  stock text not null default 'in' check (stock in ('in', 'out', 'order')),
   popular boolean not null default false,
   article text,
   card_title text,
   image text,
+  sort_order integer not null default 0,
   is_published boolean not null default true,
   updated_at timestamptz not null default now()
 );
@@ -58,3 +59,78 @@ insert into public.products (
   '/products/fiberglass-rebar.webp'
 )
 on conflict (slug) do nothing;
+
+-- RPC для админки (секрет совпадает с паролем admin в коде: romedov2026)
+create or replace function public.admin_list_products(admin_secret text)
+returns setof public.products
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if admin_secret is distinct from 'romedov2026' then
+    raise exception 'forbidden';
+  end if;
+  return query
+    select *
+    from public.products
+    order by updated_at desc
+    limit 200;
+end;
+$$;
+
+create or replace function public.admin_insert_product(
+  admin_secret text,
+  p_slug text,
+  p_category_id text,
+  p_name text,
+  p_size text,
+  p_dimension numeric,
+  p_steel text,
+  p_gost text,
+  p_length_m numeric,
+  p_sale_unit text,
+  p_weight_kg numeric,
+  p_price_per_ton numeric,
+  p_price_per_unit numeric,
+  p_price_per_meter numeric,
+  p_meters_per_sale_unit numeric,
+  p_stock text,
+  p_popular boolean,
+  p_article text,
+  p_card_title text,
+  p_image text,
+  p_is_published boolean
+)
+returns bigint
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  new_id bigint;
+begin
+  if admin_secret is distinct from 'romedov2026' then
+    raise exception 'forbidden';
+  end if;
+
+  insert into public.products (
+    slug, category_id, name, size, dimension, steel, gost, length_m, sale_unit,
+    weight_kg, price_per_ton, price_per_unit, price_per_meter, meters_per_sale_unit,
+    stock, popular, article, card_title, image, is_published, updated_at
+  ) values (
+    p_slug, p_category_id, p_name, p_size, p_dimension, p_steel, p_gost, p_length_m, p_sale_unit,
+    p_weight_kg, p_price_per_ton, p_price_per_unit, p_price_per_meter, p_meters_per_sale_unit,
+    p_stock, p_popular, p_article, p_card_title, p_image, coalesce(p_is_published, true), now()
+  )
+  returning id into new_id;
+
+  return new_id;
+end;
+$$;
+
+grant execute on function public.admin_list_products(text) to anon, authenticated;
+grant execute on function public.admin_insert_product(
+  text, text, text, text, text, numeric, text, text, numeric, text, numeric,
+  numeric, numeric, numeric, numeric, text, boolean, text, text, text, boolean
+) to anon, authenticated;
