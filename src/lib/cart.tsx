@@ -3,7 +3,13 @@ import type { ReactNode } from "react";
 
 import { CartContext } from "@/lib/cart-context";
 import type { CartContextValue, CartEntry, CartLine } from "@/lib/cart-context";
-import { findProductBySlug, lineTotal, lineWeightKg, minQuantity } from "@/lib/catalog";
+import {
+  findProductBySlug,
+  hydrateDbProductsForSlugs,
+  lineTotal,
+  lineWeightKg,
+  minQuantity,
+} from "@/lib/catalog";
 
 const STORAGE_KEY = "romedov-cart-v1";
 
@@ -19,7 +25,6 @@ function readStorage(): CartLine[] {
       if (typeof item !== "object" || item === null) return [];
       const { slug, quantity } = item as { slug?: unknown; quantity?: unknown };
       if (typeof slug !== "string" || typeof quantity !== "number" || quantity <= 0) return [];
-      if (!findProductBySlug(slug)) return [];
       return [{ slug, quantity }];
     });
   } catch {
@@ -32,8 +37,22 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    setLines(readStorage());
-    setReady(true);
+    let cancelled = false;
+
+    void (async () => {
+      const stored = readStorage();
+      const slugs = stored.map((line) => line.slug);
+      await hydrateDbProductsForSlugs(slugs);
+      if (cancelled) return;
+      setLines(
+        stored.filter((line) => findProductBySlug(line.slug)),
+      );
+      setReady(true);
+    })();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   useEffect(() => {

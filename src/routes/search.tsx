@@ -1,10 +1,9 @@
 import { Link, createFileRoute } from "@tanstack/react-router";
-import { useMemo } from "react";
-
 import { Breadcrumbs } from "@/components/shop/Breadcrumbs";
 import { ProductCard } from "@/components/shop/ProductCard";
 import { Shell } from "@/components/shop/Shell";
-import { CATEGORIES_BY_ORDER, searchProducts } from "@/lib/catalog";
+import { CATEGORIES_BY_ORDER, PRODUCTS, searchProductsMerged } from "@/lib/catalog";
+import { searchProductsInSupabase } from "@/lib/supabase/queries";
 import { PHONE_DISPLAY, PHONE_HREF } from "@/lib/contacts";
 import { buildSeo } from "@/lib/seo";
 
@@ -12,6 +11,16 @@ export const Route = createFileRoute("/search")({
   validateSearch: (search: Record<string, unknown>): { q: string } => ({
     q: typeof search["q"] === "string" ? search["q"] : "",
   }),
+  loaderDeps: ({ search }) => ({ q: search.q }),
+  loader: async ({ deps }) => {
+    const query = deps.q.trim();
+    if (query.length < 2) {
+      return { results: [] as ReturnType<typeof searchProductsMerged> };
+    }
+
+    const dbHits = await searchProductsInSupabase(query, 48);
+    return { results: searchProductsMerged(PRODUCTS, dbHits, query, 48) };
+  },
   head: () =>
     buildSeo({
       title: "Поиск по каталогу металлопроката — Ромедов",
@@ -24,7 +33,7 @@ export const Route = createFileRoute("/search")({
 
 function SearchPage() {
   const { q } = Route.useSearch();
-  const results = useMemo(() => searchProducts(q, 48), [q]);
+  const { results } = Route.useLoaderData();
   const query = q.trim();
 
   return (

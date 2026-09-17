@@ -8,7 +8,7 @@ import {
   EMPTY_FILTERS,
   applyFilters,
   findCategoryBySlug,
-  getProductsByCategory,
+  getProductsByCategoryAsync,
   getSteelOptions,
   unitPrice,
 } from "@/lib/catalog";
@@ -18,10 +18,11 @@ import { buildSeo } from "@/lib/seo";
 import { PRICE_NOTE } from "@/lib/site";
 
 export const Route = createFileRoute("/catalog/$category")({
-  loader: ({ params }) => {
+  loader: async ({ params }) => {
     const category = findCategoryBySlug(params.category);
     if (!category) throw notFound();
-    return { category };
+    const products = await getProductsByCategoryAsync(category.id);
+    return { category, products };
   },
   head: ({ loaderData }) => {
     if (!loaderData) return {};
@@ -37,13 +38,12 @@ export const Route = createFileRoute("/catalog/$category")({
 });
 
 function CategoryPage() {
-  const { category } = Route.useLoaderData();
+  const { category, products } = Route.useLoaderData();
 
   const [filters, setFilters] = useState<CatalogFilters>(EMPTY_FILTERS);
   const [priceMin, setPriceMin] = useState(0);
   const [priceMax, setPriceMax] = useState(9999);
 
-  const products = useMemo(() => getProductsByCategory(category.id), [category.id]);
   const steelOptions = useMemo(() => getSteelOptions(products), [products]);
 
   const priceCeiling = useMemo(() => {

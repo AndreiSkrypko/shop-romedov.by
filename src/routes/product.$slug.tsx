@@ -4,9 +4,10 @@ import { ProductCardCatalog } from "@/components/shop/ProductCardCatalog";
 import { ProductDetailCommerce } from "@/components/shop/ProductDetailCommerce";
 import { Shell } from "@/components/shop/Shell";
 import {
-  findProductBySlug,
+  findProductBySlugAsync,
   formatDecimal,
   getCategoryById,
+  getProductsByCategoryAsync,
   getRelatedProducts,
   productImage,
   saleUnitLabel,
@@ -15,10 +16,11 @@ import { buildSeo, jsonLd } from "@/lib/seo";
 import { SITE_URL } from "@/lib/site";
 
 export const Route = createFileRoute("/product/$slug")({
-  loader: ({ params }) => {
-    const product = findProductBySlug(params.slug);
+  loader: async ({ params }) => {
+    const product = await findProductBySlugAsync(params.slug);
     if (!product) throw notFound();
-    return { product, category: getCategoryById(product.categoryId) };
+    const peers = await getProductsByCategoryAsync(product.categoryId);
+    return { product, category: getCategoryById(product.categoryId), peers };
   },
   head: ({ loaderData }) => {
     if (!loaderData) return {};
@@ -36,8 +38,8 @@ export const Route = createFileRoute("/product/$slug")({
 });
 
 function ProductPage() {
-  const { product, category } = Route.useLoaderData();
-  const related = getRelatedProducts(product, 4);
+  const { product, category, peers } = Route.useLoaderData();
+  const related = getRelatedProducts(product, peers, 4);
 
   return (
     <Shell>

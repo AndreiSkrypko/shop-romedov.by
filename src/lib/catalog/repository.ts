@@ -1,41 +1,67 @@
 import {
-  CATALOG_USE_DEMO_DB,
-  DEMO_DB_CATEGORY_ID,
-  DEMO_DB_PRODUCTS,
-  loadProductFromDemoDb,
-  loadProductsFromDemoDb,
-} from "./demo-db";
+  fetchProductBySlugFromSupabase,
+  fetchProductsByCategoryFromSupabase,
+  fetchProductsBySlugsFromSupabase,
+  fetchSupabaseProductSlugs,
+} from "@/lib/supabase/queries";
+
+import { getCachedDbProduct, rememberDbProducts } from "./db-cache";
 import { PRODUCTS } from "./products";
 import type { CategoryId, Product } from "./types";
 
 const STATIC_BY_SLUG = new Map<string, Product>(PRODUCTS.map((item) => [item.slug, item]));
 
-/** Все slug для пререндера и sitemap. */
-export function getAllProductSlugs(): string[] {
-  const slugs = new Set(PRODUCTS.map((p) => p.slug));
-  for (const product of DEMO_DB_PRODUCTS) {
-    slugs.add(product.slug);
-  }
-  return [...slugs];
+export function getStaticProductSlugs(): string[] {
+  return PRODUCTS.map((p) => p.slug);
 }
 
+/** Все slug для пререндера и sitemap (статика; Supabase дополняется при сборке). */
+export function getAllProductSlugs(): string[] {
+  return getStaticProductSlugs();
+}
+
+export { fetchSupabaseProductSlugs };
+
 export function resolveProduct(slug: string): Product | undefined {
-  if (CATALOG_USE_DEMO_DB) {
-    const fromDb = loadProductFromDemoDb(slug);
-    if (fromDb) return fromDb;
-  }
+  const cached = getCachedDbProduct(slug);
+  if (cached) return cached;
   return STATIC_BY_SLUG.get(slug);
 }
 
+export async function resolveProductAsync(slug: string): Promise<Product | undefined> {
+  const staticProduct = STATIC_BY_SLUG.get(slug);
+  if (staticProduct) return staticProduct;
+
+  const cached = getCachedDbProduct(slug);
+  if (cached) return cached;
+
+  const fromDb = await fetchProductBySlugFromSupabase(slug);
+  if (fromDb) rememberDbProducts([fromDb]);
+  return fromDb;
+}
+
 export function listProductsByCategory(categoryId: CategoryId): Product[] {
-  const staticInCategory = PRODUCTS.filter((product) => product.categoryId === categoryId);
+  return PRODUCTS.filter((product) => product.categoryId === categoryId);
+}
 
-  if (CATALOG_USE_DEMO_DB && categoryId === DEMO_DB_CATEGORY_ID) {
-    const fromDb = loadProductsFromDemoDb(categoryId);
-    const dbSlugs = new Set(fromDb.map((item) => item.slug));
-    const staticRest = staticInCategory.filter((item) => !dbSlugs.has(item.slug));
-    return [...fromDb, ...staticRest];
-  }
+export async function listProductsByCategoryAsync(categoryId: CategoryId): Promise<Product[]> {
+  const fromDb = await fetchProductsByCategoryFromSupabase(categoryId);
+  rememberDbProducts(fromDb);
 
-  return staticInCategory;
+  const dbSlugs = new Set(fromDb.map((item) => item.slug));
+  const staticRest = PRODUCTS.filter(
+    (product) => product.categoryId === categoryId && !dbSlugs.has(product.slug),
+  );
+
+  return [...fromDb, ...staticRest];
+}
+
+export async function hydrateDbProductsForSlugs(slugs: string[]): Promise<void> {
+  const missing = slugs.filter(
+    (slug) => !STATIC_BY_SLUG.has(slug) && !getCachedDbProduct(slug),
+  );
+  if (missing.length === 0) return;
+
+  const fromDb = await fetchProductsBySlugsFromSupabase(missing);
+  rememberDbProducts(fromDb);
 }

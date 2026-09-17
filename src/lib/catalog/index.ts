@@ -1,20 +1,38 @@
 import { CATEGORIES, CATEGORIES_BY_ORDER, findCategoryBySlug, getCategoryById } from "./categories";
-import { CATALOG_USE_DEMO_DB, DEMO_DB_CATEGORY_ID } from "./demo-db";
 import { PRODUCTS } from "./products";
-import { listProductsByCategory, resolveProduct } from "./repository";
+import {
+  listProductsByCategory,
+  listProductsByCategoryAsync,
+  resolveProduct,
+  resolveProductAsync,
+} from "./repository";
 import type { Category, CategoryId, Product, SaleUnit } from "./types";
 
 export { CATEGORIES, CATEGORIES_BY_ORDER, findCategoryBySlug, getCategoryById };
-export { PRODUCTS, CATALOG_USE_DEMO_DB, DEMO_DB_CATEGORY_ID };
-export { listProductsByCategory, resolveProduct };
+export { PRODUCTS };
+export {
+  hydrateDbProductsForSlugs,
+  listProductsByCategory,
+  listProductsByCategoryAsync,
+  resolveProduct,
+  resolveProductAsync,
+} from "./repository";
 export type { Category, CategoryId, Product, SaleUnit };
 
 export function findProductBySlug(slug: string): Product | undefined {
   return resolveProduct(slug);
 }
 
+export async function findProductBySlugAsync(slug: string): Promise<Product | undefined> {
+  return resolveProductAsync(slug);
+}
+
 export function getProductsByCategory(categoryId: CategoryId): Product[] {
   return listProductsByCategory(categoryId);
+}
+
+export async function getProductsByCategoryAsync(categoryId: CategoryId): Promise<Product[]> {
+  return listProductsByCategoryAsync(categoryId);
 }
 
 export function countProductsByCategory(categoryId: CategoryId): number {
@@ -43,8 +61,8 @@ export function getPopularProducts(limit = 8): Product[] {
 }
 
 /** Похожие позиции из той же категории — для карточки товара. */
-export function getRelatedProducts(product: Product, limit = 4): Product[] {
-  return getProductsByCategory(product.categoryId)
+export function getRelatedProducts(product: Product, peers: Product[], limit = 4): Product[] {
+  return peers
     .filter((item) => item.slug !== product.slug)
     .sort(
       (a, b) =>
@@ -207,23 +225,42 @@ export function sortProducts(products: Product[], sort: SortKey): Product[] {
 
 // --- Поиск ------------------------------------------------------------------
 
-export function searchProducts(query: string, limit = 24): Product[] {
+function searchInProductList(products: Product[], query: string, limit: number): Product[] {
   const needle = query.trim().toLowerCase();
   if (needle.length < 2) return [];
 
   const words = needle.split(/\s+/);
 
-  return PRODUCTS.filter((product) => {
-    const haystack = [
-      product.name,
-      product.size,
-      product.steel,
-      product.gost,
-      getCategoryById(product.categoryId).name,
-    ]
-      .join(" ")
-      .toLowerCase();
+  return products
+    .filter((product) => {
+      const haystack = [
+        product.name,
+        product.size,
+        product.steel,
+        product.gost,
+        product.article ?? "",
+        getCategoryById(product.categoryId).name,
+      ]
+        .join(" ")
+        .toLowerCase();
 
-    return words.every((word) => haystack.includes(word));
-  }).slice(0, limit);
+      return words.every((word) => haystack.includes(word));
+    })
+    .slice(0, limit);
+}
+
+export function searchProducts(query: string, limit = 24): Product[] {
+  return searchInProductList(PRODUCTS, query, limit);
+}
+
+export function searchProductsMerged(
+  staticProducts: Product[],
+  dbProducts: Product[],
+  query: string,
+  limit = 24,
+): Product[] {
+  const bySlug = new Map<string, Product>();
+  for (const product of staticProducts) bySlug.set(product.slug, product);
+  for (const product of dbProducts) bySlug.set(product.slug, product);
+  return searchInProductList([...bySlug.values()], query, limit);
 }

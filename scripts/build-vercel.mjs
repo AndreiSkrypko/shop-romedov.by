@@ -19,7 +19,7 @@ function run(command, args) {
 run("npx", ["vite", "build"]);
 run("node", ["scripts/generate-sitemap.mjs"]);
 
-const candidates = [resolve(root, ".vercel/output/static"), resolve(root, ".output/public")];
+const candidates = [resolve(root, ".vercel/output/static"), resolve(root, "dist")];
 const outputDir = candidates.find((path) => existsSync(resolve(path, "index.html")));
 
 if (!outputDir) {

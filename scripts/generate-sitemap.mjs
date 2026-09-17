@@ -6,11 +6,10 @@ import { resolve } from "node:path";
 const SITE_URL = "https://shop.romedov.by";
 const root = resolve(import.meta.dirname, "..");
 
-const candidates = [resolve(root, ".output/public"), resolve(root, ".vercel/output/static")];
-const outputDir = candidates.find((path) => existsSync(resolve(path, "index.html")));
+const outputDir = resolve(root, "dist");
 
-if (!outputDir) {
-  console.error("sitemap: не найден каталог сборки со index.html");
+if (!existsSync(resolve(outputDir, "index.html"))) {
+  console.error("sitemap: не найден dist/index.html — сначала выполните vite build");
   process.exit(1);
 }
 

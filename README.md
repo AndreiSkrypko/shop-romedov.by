@@ -8,7 +8,7 @@ TanStack Start (React 19 + Vite), Tailwind CSS v4, статический пре
 ```bash
 npm install
 npm run dev      # локальная разработка, http://localhost:3000
-npm run build    # пререндер + sitemap.xml + копирование в dist/
+npm run build    # пререндер в dist/ + sitemap.xml
 npm run lint     # eslint + prettier
 ```
 
@@ -20,6 +20,8 @@ Hoster.by. Для Vercel используется `npm run build:vercel` и `ver
 | Путь | Назначение |
 | --- | --- |
 | `src/lib/catalog/` | Категории, товары, расчёт цен и веса, фильтры, поиск |
+| `src/lib/supabase/` | Ключи и запросы к Supabase (товары из таблицы `products`) |
+| `scripts/supabase-schema.sql` | SQL для создания таблицы и первой позиции в Supabase |
 | `src/lib/cart.tsx` | Провайдер корзины с сохранением в `localStorage` |
 | `src/lib/order.ts` | Формат заказа, валидация, текст письма |
 | `src/lib/request.ts` | Формат заявки без корзины (форма на странице контактов) |
