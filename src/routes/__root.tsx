@@ -7,7 +7,7 @@ import {
   createRootRouteWithContext,
   useRouter,
 } from "@tanstack/react-router";
-import { type ReactNode } from "react";
+import { type ReactNode, useEffect } from "react";
 import { Toaster } from "sonner";
 
 import { CartProvider } from "@/lib/cart";
@@ -134,8 +134,14 @@ function RootShell({ children }: { children: ReactNode }) {
 }
 
 function RootComponent() {
+  const router = useRouter();
   const { queryClient } = Route.useRouteContext();
   const { categories, productCountByCategoryId } = Route.useLoaderData();
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    void router.invalidate();
+  }, [router]);
 
   return (
     <QueryClientProvider client={queryClient}>

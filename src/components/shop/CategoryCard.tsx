@@ -3,6 +3,7 @@ import { ArrowRight } from "lucide-react";
 
 import { useProductCountByCategory } from "@/lib/catalog";
 import type { Category } from "@/lib/catalog";
+import { resolvePublicAssetUrl } from "@/lib/utils";
 
 function plural(count: number): string {
   const mod10 = count % 10;
@@ -23,7 +24,7 @@ export function CategoryCard({ category }: { category: Category }) {
     >
       <div className="relative aspect-[4/3] overflow-hidden bg-white">
         <img
-          src={category.image}
+          src={resolvePublicAssetUrl(category.image)}
           alt={category.name}
           loading="lazy"
           decoding="async"
