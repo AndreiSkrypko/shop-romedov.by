@@ -848,7 +848,7 @@ select
   c.id,
   v.slug,
   v.name,
-  coalesce(nullif(c.image, ''), '/products/sheet.webp'),
+  v.image,
   v.sort_order,
   true,
   now()
@@ -859,44 +859,51 @@ cross join (
       'sheet-gk',
       'goryachekatannyy',
       'Лист стальной горячекатанный',
+      '/products/sheet.webp',
       1
     ),
     (
       'sheet-polymer',
       'polimernoe-pokrytie',
       'Лист плоский с полимерным покрытием',
+      '/products/sheet.webp',
       2
     ),
     (
       'sheet-hk',
       'holodnokatanyy',
       'Лист стальной холоднокатаный',
+      '/products/sheet.webp',
       3
     ),
     (
       'sheet-pvl',
       'prosechno-vytyazhnoy',
       'Лист просечно-вытяжной',
+      '/products/sheet.webp',
       4
     ),
     (
       'sheet-rif',
       'riflenyy',
       'Лист рифлёный стальной',
+      '/products/sheet.webp',
       5
     ),
     (
       'sheet-zn',
       'ocinkovannyy',
       'Лист стальной оцинкованный',
+      '/products/sheet.webp',
       6
     )
-) as v(id, slug, name, sort_order)
+) as v(id, slug, name, image, sort_order)
 where c.slug = 'listy-stalnye'
 on conflict (id) do update set
   category_id = excluded.category_id,
   slug = excluded.slug,
   name = excluded.name,
+  image = excluded.image,
   sort_order = excluded.sort_order,
   is_published = true,
   updated_at = now();

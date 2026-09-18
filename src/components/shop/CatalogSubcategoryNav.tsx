@@ -1,7 +1,9 @@
 import { Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import type { Category, Subcategory } from "@/lib/catalog";
+import { CATALOG_PRODUCTS_ANCHOR_ID } from "@/lib/site";
+import { resolvePublicAssetUrl } from "@/lib/utils";
 
 type CatalogSubcategoryNavProps = {
   category: Category;
@@ -11,8 +13,10 @@ type CatalogSubcategoryNavProps = {
 
 function resolveSubcategoryImage(sub: Subcategory, category: Category): string {
   const img = sub.image?.trim();
-  if (img && img.length > 0 && !img.endsWith("/supplies.webp")) return img;
-  return category.image;
+  if (img && img.length > 0 && !img.endsWith("/supplies.webp")) {
+    return resolvePublicAssetUrl(img);
+  }
+  return resolvePublicAssetUrl(category.image);
 }
 
 type TileProps = {
@@ -20,17 +24,35 @@ type TileProps = {
   name: string;
   image: string;
   active: boolean;
-  to: { search: { sub?: string } };
+  to: { search: { sub?: string }; hash?: string };
 };
 
 function SubcategoryTile({ category, name, image, active, to }: TileProps) {
-  const [src, setSrc] = useState(image);
+  const fallback = resolvePublicAssetUrl(category.image);
+  const [useFallback, setUseFallback] = useState(false);
+
+  useEffect(() => {
+    setUseFallback(false);
+  }, [image]);
+
+  const src = useFallback ? fallback : image;
+
+  const scrollToProducts = () => {
+    if (!to.hash) return;
+    requestAnimationFrame(() => {
+      document
+        .getElementById(CATALOG_PRODUCTS_ANCHOR_ID)
+        ?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  };
 
   return (
     <Link
       to="/catalog/$category"
       params={{ category: category.slug }}
       search={to.search}
+      hash={to.hash}
+      onClick={scrollToProducts}
       className={`group flex w-[calc(50%-0.375rem)] flex-col overflow-hidden rounded-md border bg-white transition-colors sm:w-[11.25rem] ${
         active
           ? "border-brand shadow-[inset_0_0_0_1px_hsl(var(--brand))]"
@@ -43,7 +65,7 @@ function SubcategoryTile({ category, name, image, active, to }: TileProps) {
           alt=""
           loading="lazy"
           decoding="async"
-          onError={() => setSrc(category.image)}
+          onError={() => setUseFallback(true)}
           className="max-h-full max-w-full object-contain transition-transform duration-300 group-hover:scale-[1.03]"
         />
       </div>
@@ -68,7 +90,7 @@ export function CatalogSubcategoryNav({
         <SubcategoryTile
           category={category}
           name="Вся категория"
-          image={category.image}
+          image={resolvePublicAssetUrl(category.image)}
           active={!activeSubSlug}
           to={{ search: {} }}
         />
@@ -79,7 +101,7 @@ export function CatalogSubcategoryNav({
             name={sub.name}
             image={resolveSubcategoryImage(sub, category)}
             active={activeSubSlug === sub.slug}
-            to={{ search: { sub: sub.slug } }}
+            to={{ search: { sub: sub.slug }, hash: CATALOG_PRODUCTS_ANCHOR_ID }}
           />
         ))}
       </div>

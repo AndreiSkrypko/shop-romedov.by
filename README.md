@@ -26,7 +26,7 @@ npm run lint     # eslint + prettier
 4. `scripts/supabase-storage.sql` (загрузка фото в админке)
 5. `scripts/supabase-seed-data.sql` (категории, подкатегории, товары)
 
-Обложки: `public/products/`. Повторный запуск сидов безопасен (`on conflict`).
+Обложки: `public/products/`. Картинки товаров и подкатегорий — поле `image` в Supabase (админка или SQL). Повторный запуск сидов безопасен (`on conflict`).
 
 `npm run build` → `dist/` (витрина + админка) — заливка на Hoster.by.
 

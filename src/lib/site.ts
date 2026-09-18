@@ -14,3 +14,6 @@ export const PRICE_NOTE =
 
 export const CATALOG_PRICE_DISCLAIMER =
   "Указанные цены носят информационный характер и не являются публичной офертой. Окончательную стоимость уточняйте у менеджера отдела продаж.";
+
+/** Якорь блока товаров на странице категории (подкатегории ведут сюда). */
+export const CATALOG_PRODUCTS_ANCHOR_ID = "catalog-products";

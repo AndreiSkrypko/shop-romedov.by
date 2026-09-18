@@ -10,7 +10,7 @@ export const adminSubcategorySchema = z.object({
     .max(80)
     .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "Slug: a-z, цифры, дефисы"),
   name: z.string().trim().min(2, "Укажите название").max(200),
-  image: z.string().trim().max(300).default(""),
+  image: z.string().trim().max(2048).default(""),
   sortOrder: z.coerce.number().int().min(0).max(9999).default(100),
   isPublished: z.preprocess((v) => v !== false && v !== "false", z.boolean()).default(true),
 });

@@ -1,5 +1,5 @@
 import { Link, createFileRoute, notFound } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { useRememberCatalogCategory } from "@/lib/last-catalog-path";
 
@@ -21,7 +21,7 @@ import { useLiveCategoryPage } from "@/lib/catalog/use-live-category-page";
 import type { CatalogFilters } from "@/lib/catalog";
 import { PHONE_DISPLAY, PHONE_HREF } from "@/lib/contacts";
 import { buildSeo } from "@/lib/seo";
-import { PRICE_NOTE } from "@/lib/site";
+import { CATALOG_PRODUCTS_ANCHOR_ID, PRICE_NOTE } from "@/lib/site";
 
 type CategorySearch = {
   sub?: string;
@@ -79,6 +79,17 @@ function CategoryPage() {
 
   useRememberCatalogCategory(category);
 
+  useEffect(() => {
+    if (!subSlug) return;
+    const frame = requestAnimationFrame(() => {
+      document.getElementById(CATALOG_PRODUCTS_ANCHOR_ID)?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [subSlug]);
+
   return (
     <CatalogStorefrontLayout
       breadcrumbs={[
@@ -111,15 +122,20 @@ function CategoryPage() {
         />
       ) : null}
 
-      <CatalogSortBar
-        filters={filters}
-        onChange={setFilters}
-        shown={filtered.length}
-        total={categoryProducts.length}
-      />
+      <section
+        id={CATALOG_PRODUCTS_ANCHOR_ID}
+        className="scroll-mt-24"
+        aria-label="Товары категории"
+      >
+        <CatalogSortBar
+          filters={filters}
+          onChange={setFilters}
+          shown={filtered.length}
+          total={categoryProducts.length}
+        />
 
-      {filtered.length === 0 ? (
-        <div className="rounded-lg border border-dashed border-border p-10 text-center text-sm text-muted-foreground">
+        {filtered.length === 0 ? (
+          <div className="rounded-lg border border-dashed border-border p-10 text-center text-sm text-muted-foreground">
           {activeSub ? (
             <>
               В подкатегории «{activeSub.name}» пока нет товаров — назначьте подкатегорию в{" "}
@@ -145,16 +161,17 @@ function CategoryPage() {
               </a>
             </>
           )}
-        </div>
-      ) : (
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
-          {filtered.map((product) => (
-            <ProductCardCatalog key={product.slug} product={product} />
-          ))}
-        </div>
-      )}
+          </div>
+        ) : (
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+            {filtered.map((product) => (
+              <ProductCardCatalog key={product.slug} product={product} />
+            ))}
+          </div>
+        )}
 
-      <p className="mt-6 text-xs text-muted-foreground">{PRICE_NOTE}</p>
+        <p className="mt-6 text-xs text-muted-foreground">{PRICE_NOTE}</p>
+      </section>
     </CatalogStorefrontLayout>
   );
 }
