@@ -2,6 +2,7 @@ import { Link, createFileRoute } from "@tanstack/react-router";
 import { ArrowRight, ShoppingCart, Trash2 } from "lucide-react";
 
 import { Breadcrumbs } from "@/components/shop/Breadcrumbs";
+import { ProductMedia } from "@/components/shop/ProductMedia";
 import { QuantityStepper } from "@/components/shop/QuantityStepper";
 import { Shell } from "@/components/shop/Shell";
 import { useCart } from "@/lib/cart-context";
@@ -11,13 +12,13 @@ import {
   formatWeight,
   categoryFromList,
   minQuantity,
-  productImage,
   useCatalogCategories,
   quantityStep,
   saleUnitLabel,
   unitPrice,
 } from "@/lib/catalog";
 import { PHONE_DISPLAY, PHONE_HREF } from "@/lib/contacts";
+import { shoppingTrailCrumbs } from "@/lib/last-catalog-path";
 import { buildSeo } from "@/lib/seo";
 import { PRICE_NOTE } from "@/lib/site";
 
@@ -40,7 +41,7 @@ function CartPage() {
   return (
     <Shell>
       <div className="mx-auto max-w-7xl px-5 py-8 lg:px-8 lg:py-12">
-        <Breadcrumbs items={[{ label: "Корзина", kind: "current" }]} />
+        <Breadcrumbs items={shoppingTrailCrumbs("cart")} />
 
         <div className="mt-6 flex flex-wrap items-end justify-between gap-4">
           <h1 className="font-display text-3xl font-semibold uppercase sm:text-4xl">Корзина</h1>
@@ -89,12 +90,13 @@ function CartPage() {
                     <Link
                       to="/product/$slug"
                       params={{ slug: product.slug }}
-                      className="h-20 w-20 shrink-0 overflow-hidden rounded-xl border border-border bg-white"
+                      className="flex h-20 w-20 shrink-0 overflow-hidden rounded-xl border border-border bg-white"
                     >
-                      <img
-                        src={productImage(product)}
-                        alt={product.name}
-                        className="h-full w-full object-contain p-1.5"
+                      <ProductMedia
+                        product={product}
+                        variant="card"
+                        className="size-full min-h-0 min-w-0"
+                        imgClassName="size-full object-contain p-1.5"
                       />
                     </Link>
 

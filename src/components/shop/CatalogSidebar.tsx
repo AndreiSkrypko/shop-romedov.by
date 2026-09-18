@@ -12,11 +12,6 @@ type CatalogSidebarProps = {
   onFiltersChange?: ((filters: CatalogFilters) => void) | undefined;
   onlyInStock: boolean;
   onOnlyInStockChange: (value: boolean) => void;
-  priceMin: number;
-  priceMax: number;
-  priceCeiling: number;
-  onPriceMinChange: (value: number) => void;
-  onPriceMaxChange: (value: number) => void;
   onResetFilters: () => void;
 };
 
@@ -28,11 +23,6 @@ export function CatalogSidebar({
   onFiltersChange,
   onlyInStock,
   onOnlyInStockChange,
-  priceMin,
-  priceMax,
-  priceCeiling,
-  onPriceMinChange,
-  onPriceMaxChange,
   onResetFilters,
 }: CatalogSidebarProps) {
   const categories = useCatalogCategories();
@@ -46,8 +36,9 @@ export function CatalogSidebar({
   };
 
   return (
-    <aside className="space-y-6">
-      <nav className="overflow-hidden rounded-lg border border-border bg-background">
+    <aside className={`space-y-6 ${showProductFilters ? "" : "hidden lg:block"}`}>
+      {/* На телефоне категории — в шапке (меню); здесь только десктоп */}
+      <nav className="hidden overflow-hidden rounded-lg border border-border bg-background lg:block">
         <p className="border-b border-border bg-secondary/50 px-4 py-3 text-sm font-semibold">
           Каталог
         </p>
@@ -136,40 +127,6 @@ export function CatalogSidebar({
               </div>
             </div>
           ) : null}
-
-          <div className="mt-5">
-            <p className="text-sm font-semibold">Цена, BYN</p>
-            <div className="mt-3 flex items-center gap-2">
-              <input
-                type="number"
-                min={0}
-                max={priceMax}
-                value={priceMin}
-                onChange={(event) => onPriceMinChange(Number(event.target.value) || 0)}
-                className="w-full rounded-md border border-border px-2 py-1.5 text-sm"
-                aria-label="Цена от"
-              />
-              <span className="text-muted-foreground">—</span>
-              <input
-                type="number"
-                min={priceMin}
-                max={priceCeiling}
-                value={priceMax}
-                onChange={(event) => onPriceMaxChange(Number(event.target.value) || priceCeiling)}
-                className="w-full rounded-md border border-border px-2 py-1.5 text-sm"
-                aria-label="Цена до"
-              />
-            </div>
-            <input
-              type="range"
-              min={0}
-              max={priceCeiling}
-              value={priceMax}
-              onChange={(event) => onPriceMaxChange(Number(event.target.value))}
-              className="mt-3 w-full accent-lime-deep"
-              aria-label="Максимальная цена"
-            />
-          </div>
         </div>
       ) : null}
     </aside>

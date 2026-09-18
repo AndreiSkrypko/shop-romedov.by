@@ -16,20 +16,19 @@ npm run lint     # eslint + prettier
 Если таблица `products` уже была создана раньше, выполните в SQL Editor файл `scripts/supabase-admin-rpc.sql`.
 Для загрузки фото в админке на Hoster.by: выполните `scripts/supabase-storage.sql` в Supabase (политика загрузки через publishable key).
 
-Каталог арматуры из Supabase (статика в коде убрана):
+Каталог и админка читают данные из Supabase (ключ в `src/lib/supabase/config.ts`).
 
-- `scripts/supabase-seed-rebar-ribbed.sql` — рифлёная, 8 позиций
-- `scripts/supabase-rebar-ribbed-sync.sql` — обновить фото/порядок рифлёной в уже развёрнутой БД
-- `scripts/supabase-seed-rebar-smooth.sql` — гладкая, 7 позиций
-- `scripts/supabase-seed-fiberglass-rebar.sql` — стеклопластиковая, 7 позиций
+**Новая база** — в SQL Editor по порядку:
 
-Обложки категорий: `public/products/rebar-catalog/*.webp` / `*.png`.
+1. `scripts/supabase-schema.sql`
+2. `scripts/supabase-subcategories.sql`
+3. `scripts/supabase-admin-rpc.sql`
+4. `scripts/supabase-storage.sql` (загрузка фото в админке)
+5. `scripts/supabase-seed-data.sql` (категории, подкатегории, товары)
 
-Подкатегории (плитки над товарами): `scripts/supabase-subcategories.sql` — затем **Админка → Подкатегории** и поле «Подкатегория» в товаре.
+Обложки: `public/products/`. Повторный запуск сидов безопасен (`on conflict`).
 
-`npm run build` кладёт статику в `dist/` (витрина + админка `/admin/login`) — заливайте на Hoster.by.
-Каталог и админка ходят в Supabase из браузера (ключ в `src/lib/supabase/config.ts`).
-Для Vercel: `npm run build:vercel` и `vercel.json`.
+`npm run build` → `dist/` (витрина + админка) — заливка на Hoster.by.
 
 ## Структура
 
@@ -37,7 +36,7 @@ npm run lint     # eslint + prettier
 | --- | --- |
 | `src/lib/catalog/` | Категории, товары, расчёт цен и веса, фильтры, поиск |
 | `src/lib/supabase/` | Ключи и запросы к Supabase (товары из таблицы `products`) |
-| `scripts/supabase-schema.sql` | SQL для создания таблицы и первой позиции в Supabase |
+| `scripts/supabase-*.sql` | Схема, RPC, сид каталога |
 | `src/lib/cart.tsx` | Провайдер корзины с сохранением в `localStorage` |
 | `src/lib/order.ts` | Формат заказа, валидация, текст письма |
 | `src/lib/request.ts` | Формат заявки без корзины (форма на странице контактов) |
@@ -48,7 +47,7 @@ npm run lint     # eslint + prettier
 
 ## Каталог
 
-Товары описаны в `src/lib/catalog/products.ts`. Вес считается из площади сечения
+Товары в Supabase; в коде — расчёт цены и веса. Вес считается из площади сечения
 (плотность стали 7,85 г/см³) или берётся из таблиц ГОСТ для сортового проката.
 Цена задаётся либо за тонну (`pricePerTon`), либо за единицу продажи (`pricePerUnit`) —
 итог по объёму покупателя считает `unitPrice()`.
@@ -58,12 +57,13 @@ npm run lint     # eslint + prettier
 
 ## Приём заказов
 
-Заказ и заявка сначала уходят **на почту**, затем дублируются **в Telegram**.
-Ошибка бота не отменяет уже принятый заказ, ошибка почты — отменяет.
+Форма на **контактах**, **карточке товара** и **оформление из корзины** отправляют один
+и тот же запрос в `POST /api/submit.php`: сначала **почта**, затем **Telegram**.
+Ошибка бота не отменяет принятую заявку, ошибка почты — отменяет.
 
-- Локально (`npm run dev`) используется серверная функция и SMTP из `.env`
-  (см. `.env.example`).
-- На хостинге запрос идёт в `public/api/submit.php`. Скопируйте
-  `public/api/config.example.php` в `config.php` и заполните `email_to`,
-  `telegram_bot_token`, `telegram_chat_id`. Файл `config.php` закрыт `.htaccess`
-  и не попадает в git.
+1. Заполните **`src/lib/lead-delivery.config.ts`**: `telegram_bot_token`, `telegram_chat_id`,
+   для локальной разработки — **SMTP** (`smtp_host`, `smtp_user`, `smtp_pass`).
+2. `npm run build` кладёт те же настройки в `dist/api/config.json` для `submit.php` на Hoster.by
+   (почта через `mail()`, SMTP в JSON на хостинге не нужен).
+3. Опционально: `public/api/config.json` переопределяет значения из TS (файл в `.gitignore`).
+4. Заливайте **`dist/`** целиком — внутри уже `api/submit.php` и `api/config.json`.

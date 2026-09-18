@@ -7,6 +7,7 @@ import { Link } from "@tanstack/react-router";
 export type Crumb =
   | { label: string; kind: "catalog" }
   | { label: string; kind: "category"; slug: string }
+  | { label: string; kind: "cart" }
   | { label: string; kind: "current" };
 
 const linkClass = "transition-colors hover:text-lime-deep";
@@ -30,6 +31,10 @@ export function Breadcrumbs({ items }: { items: Crumb[] }) {
             </Link>
           ) : item.kind === "category" ? (
             <Link to="/catalog/$category" params={{ category: item.slug }} className={linkClass}>
+              {item.label}
+            </Link>
+          ) : item.kind === "cart" ? (
+            <Link to="/cart" className={linkClass}>
               {item.label}
             </Link>
           ) : (

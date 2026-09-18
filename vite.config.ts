@@ -5,6 +5,7 @@ import { nitro } from "nitro/vite";
 import { defineConfig } from "vite";
 
 import { fetchSupabaseCategorySlugs, fetchSupabaseProductSlugs } from "./src/lib/supabase/queries";
+import { submitApiDevPlugin } from "./vite-plugin-submit-api-dev";
 
 export default defineConfig(async ({ command }) => {
   const productSlugs = command === "build" ? await fetchSupabaseProductSlugs() : [];
@@ -15,6 +16,7 @@ export default defineConfig(async ({ command }) => {
       tsconfigPaths: true,
     },
     plugins: [
+      submitApiDevPlugin(),
       tailwindcss(),
       tanstackStart({
         srcDirectory: "src",
@@ -28,6 +30,8 @@ export default defineConfig(async ({ command }) => {
           { path: "/catalog", prerender: { enabled: true } },
           { path: "/delivery", prerender: { enabled: true } },
           { path: "/contacts", prerender: { enabled: true } },
+          { path: "/zayavka-prinyata", prerender: { enabled: true } },
+          { path: "/zakaz-prinyat", prerender: { enabled: true } },
           { path: "/admin", prerender: { enabled: true } },
           { path: "/admin/login", prerender: { enabled: true } },
           { path: "/admin/categories", prerender: { enabled: true } },

@@ -1,3 +1,4 @@
+import { WAREHOUSE_COORDS } from "./contacts";
 import { SITE_NAME, SITE_URL } from "./site";
 
 type MetaTag =
@@ -56,5 +57,10 @@ export const ORGANIZATION_LD: Record<string, unknown> = {
     addressCountry: "BY",
     addressLocality: "Борисов",
     streetAddress: "ул. Нормандия-Неман, 167В",
+  },
+  geo: {
+    "@type": "GeoCoordinates",
+    latitude: WAREHOUSE_COORDS.lat,
+    longitude: WAREHOUSE_COORDS.lng,
   },
 };

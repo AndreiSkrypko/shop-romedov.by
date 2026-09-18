@@ -33,6 +33,10 @@ export function ShopBreadcrumbs({ items }: { items: Crumb[] }) {
             >
               {item.label}
             </Link>
+          ) : item.kind === "cart" ? (
+            <Link to="/cart" className={linkClass}>
+              {item.label}
+            </Link>
           ) : (
             <span className="text-foreground">{item.label}</span>
           )}

@@ -13,6 +13,7 @@ import {
   saleUnitLabel,
   stockStatusLabel,
 } from "@/lib/catalog";
+import { useRememberCatalogCategory } from "@/lib/last-catalog-path";
 import { buildSeo, jsonLd } from "@/lib/seo";
 import { SITE_URL } from "@/lib/site";
 
@@ -41,6 +42,7 @@ export const Route = createFileRoute("/product/$slug")({
 function ProductPage() {
   const { product, category, peers } = Route.useLoaderData();
   const related = getRelatedProducts(product, peers, 4);
+  useRememberCatalogCategory(category);
 
   return (
     <Shell>

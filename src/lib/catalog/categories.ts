@@ -1,7 +1,7 @@
 import { getCachedDbCategoryById, getCachedDbCategoryBySlug } from "./category-db-cache";
 import type { Category, CategoryId } from "./types";
 
-/** Категории хранятся только в Supabase (см. scripts/supabase-seed-categories.sql). */
+/** Категории хранятся только в Supabase (см. scripts/supabase-seed-data.sql). */
 export const CATEGORIES: Category[] = [];
 
 export const CATEGORIES_BY_ORDER: Category[] = [];

@@ -18,11 +18,6 @@ type CatalogStorefrontLayoutProps = {
   steelOptions?: string[];
   filters?: CatalogFilters;
   onFiltersChange?: (filters: CatalogFilters) => void;
-  priceMin?: number;
-  priceMax?: number;
-  priceCeiling?: number;
-  onPriceMinChange?: (value: number) => void;
-  onPriceMaxChange?: (value: number) => void;
   onResetFilters?: () => void;
   jsonLdName?: string;
   jsonLdPath?: string;
@@ -38,11 +33,6 @@ export function CatalogStorefrontLayout({
   steelOptions = [],
   filters,
   onFiltersChange,
-  priceMin = 0,
-  priceMax = 9999,
-  priceCeiling = 100,
-  onPriceMinChange,
-  onPriceMaxChange,
   onResetFilters,
   jsonLdName,
   jsonLdPath,
@@ -96,11 +86,6 @@ export function CatalogStorefrontLayout({
             onOnlyInStockChange={(value) =>
               onFiltersChange?.({ ...(filters ?? EMPTY_FILTERS), onlyInStock: value })
             }
-            priceMin={priceMin}
-            priceMax={priceMax}
-            priceCeiling={priceCeiling}
-            onPriceMinChange={onPriceMinChange ?? (() => {})}
-            onPriceMaxChange={onPriceMaxChange ?? (() => {})}
             onResetFilters={onResetFilters ?? (() => {})}
           />
 

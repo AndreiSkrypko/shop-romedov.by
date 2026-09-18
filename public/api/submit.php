@@ -52,19 +52,53 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     fail(405, 'Method not allowed');
 }
 
-$configPath = __DIR__ . '/config.php';
-if (!is_file($configPath)) {
-    fail(500, 'Сервер не настроен: отсутствует api/config.php');
+function loadLeadConfig(): array
+{
+    $jsonPath = __DIR__ . '/config.json';
+    if (is_file($jsonPath)) {
+        $decoded = json_decode((string) file_get_contents($jsonPath), true);
+        if (!is_array($decoded)) {
+            fail(500, 'Неверный public/api/config.json');
+        }
+        return $decoded;
+    }
+
+    $phpPath = __DIR__ . '/config.php';
+    if (is_file($phpPath)) {
+        $config = require $phpPath;
+        return is_array($config) ? $config : [];
+    }
+
+    fail(500, 'Создайте public/api/config.json по образцу config.example.json');
 }
 
-$config = require $configPath;
+$config = loadLeadConfig();
+
+$phpLegacyPath = __DIR__ . '/config.php';
+if (is_file($phpLegacyPath)) {
+    $legacy = require $phpLegacyPath;
+    if (is_array($legacy)) {
+        foreach (['email_to', 'email_from', 'telegram_bot_token', 'telegram_chat_id'] as $key) {
+            $current = trim((string) ($config[$key] ?? ''));
+            $fromPhp = trim((string) ($legacy[$key] ?? ''));
+            if ($current === '' && $fromPhp !== '') {
+                $config[$key] = $fromPhp;
+            }
+        }
+    }
+}
+
 $token = trim((string) ($config['telegram_bot_token'] ?? ''));
 $chatId = trim((string) ($config['telegram_chat_id'] ?? ''));
 $emailTo = trim((string) ($config['email_to'] ?? 'info@romedov.by'));
 $emailFrom = trim((string) ($config['email_from'] ?? 'noreply@romedov.by'));
 
 if ($emailTo === '') {
-    fail(500, 'Сервер не настроен: укажите email_to в config.php');
+    fail(500, 'Укажите email_to в public/api/config.json');
+}
+
+if ($token === '' || $chatId === '') {
+    fail(500, 'Укажите telegram_bot_token и telegram_chat_id в public/api/config.json');
 }
 
 $kind = ($_POST['kind'] ?? 'order') === 'request' ? 'request' : 'order';
@@ -230,8 +264,6 @@ if (!sendPlainEmail($emailTo, $emailFrom, $email, $subject, $text)) {
 }
 
 // 2. Дублируем в Telegram (ошибка бота не отменяет принятую заявку)
-if ($token !== '' && $chatId !== '') {
-    sendTelegram($token, $chatId, $text);
-}
+sendTelegram($token, $chatId, $text);
 
 echo json_encode(['ok' => true, 'orderNumber' => $orderNumber], JSON_UNESCAPED_UNICODE);

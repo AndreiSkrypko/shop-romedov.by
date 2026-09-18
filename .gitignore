@@ -17,6 +17,7 @@ dist-ssr
 *.local
 .env
 public/api/config.php
+public/api/config.json
 
 # Editor directories and files
 .vscode/*

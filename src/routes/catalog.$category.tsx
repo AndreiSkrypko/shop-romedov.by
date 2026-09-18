@@ -1,5 +1,7 @@
 import { Link, createFileRoute, notFound } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
+
+import { useRememberCatalogCategory } from "@/lib/last-catalog-path";
 
 import { CatalogSortBar } from "@/components/shop/CatalogSortBar";
 import { CatalogStorefrontLayout } from "@/components/shop/CatalogStorefrontLayout";
@@ -14,7 +16,6 @@ import {
   getProductsByCategoryAsync,
   getSteelOptions,
   listSubcategoriesByCategoryAsync,
-  unitPrice,
 } from "@/lib/catalog";
 import { useLiveCategoryPage } from "@/lib/catalog/use-live-category-page";
 import type { CatalogFilters } from "@/lib/catalog";
@@ -64,34 +65,19 @@ function CategoryPage() {
   );
 
   const [filters, setFilters] = useState<CatalogFilters>(EMPTY_FILTERS);
-  const [priceMin, setPriceMin] = useState(0);
-  const [priceMax, setPriceMax] = useState(9999);
 
   const steelOptions = useMemo(() => getSteelOptions(categoryProducts), [categoryProducts]);
 
-  const priceCeiling = useMemo(() => {
-    if (categoryProducts.length === 0) return 100;
-    return Math.ceil(Math.max(...categoryProducts.map((p) => unitPrice(p))) * 1.2);
-  }, [categoryProducts]);
-
-  const filtered = useMemo(() => {
-    let list = applyFilters(categoryProducts, filters);
-    list = list.filter((p) => {
-      const price = unitPrice(p);
-      return price >= priceMin && price <= priceMax;
-    });
-    return list;
-  }, [categoryProducts, filters, priceMin, priceMax]);
+  const filtered = useMemo(
+    () => applyFilters(categoryProducts, filters),
+    [categoryProducts, filters],
+  );
 
   const resetSidebarFilters = () => {
     setFilters(EMPTY_FILTERS);
-    setPriceMin(0);
-    setPriceMax(priceCeiling);
   };
 
-  useEffect(() => {
-    setPriceMax(priceCeiling);
-  }, [priceCeiling]);
+  useRememberCatalogCategory(category);
 
   return (
     <CatalogStorefrontLayout
@@ -113,11 +99,6 @@ function CategoryPage() {
       steelOptions={steelOptions}
       filters={filters}
       onFiltersChange={setFilters}
-      priceMin={priceMin}
-      priceMax={priceMax}
-      priceCeiling={priceCeiling}
-      onPriceMinChange={setPriceMin}
-      onPriceMaxChange={setPriceMax}
       onResetFilters={resetSidebarFilters}
       jsonLdName={category.name}
       jsonLdPath={`/catalog/${category.slug}`}

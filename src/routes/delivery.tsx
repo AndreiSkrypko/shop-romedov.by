@@ -3,6 +3,7 @@ import { Banknote, CreditCard, FileText, MapPin, Scissors, Truck } from "lucide-
 
 import { Breadcrumbs } from "@/components/shop/Breadcrumbs";
 import { Shell } from "@/components/shop/Shell";
+import { WarehouseMap } from "@/components/shop/WarehouseMap";
 import {
   ACCESS_NOTE,
   ADDRESS_PRODUCTION,
@@ -126,6 +127,7 @@ function DeliveryPage() {
             <p className="mt-4 font-display text-sm font-semibold uppercase text-lime-deep">
               Бесплатно
             </p>
+            <WarehouseMap className="mt-6" />
           </section>
 
           <section className="rounded-2xl border border-border p-6">

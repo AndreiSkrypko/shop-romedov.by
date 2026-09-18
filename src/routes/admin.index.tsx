@@ -50,7 +50,7 @@ function AdminDashboardPage() {
                 Тот же список в «Категории»
               </Link>
             ) : (
-              "Запустите scripts/supabase-seed-categories.sql в Supabase"
+              "Запустите scripts/supabase-seed-data.sql в Supabase"
             )
           }
         />
@@ -110,7 +110,7 @@ function AdminDashboardPage() {
         {snapshot.categories.length === 0 ? (
           <p className="mt-5 text-sm text-muted-foreground">
             В Supabase пока нет категорий. Выполните{" "}
-            <code className="text-xs">scripts/supabase-seed-categories.sql</code> или создайте категорию
+            <code className="text-xs">scripts/supabase-seed-data.sql</code> или создайте категорию
             в разделе{" "}
             <Link to="/admin/categories" className="text-lime-deep hover:underline">
               Категории
@@ -201,8 +201,7 @@ function AdminDashboardPage() {
                 Подкатегории
               </Link>
               {" · "}
-              <code className="text-xs">supabase-seed-categories.sql</code> или{" "}
-              <code className="text-xs">supabase-cleanup-pipe-subcategories.sql</code>
+              <code className="text-xs">supabase-seed-data.sql</code>
             </p>
           </div>
         ) : null}

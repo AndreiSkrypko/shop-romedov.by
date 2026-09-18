@@ -5,8 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite dev",
-    "build": "vite build && node scripts/generate-sitemap.mjs",
-    "build:vercel": "node scripts/build-vercel.mjs",
+    "build": "vite build && node --experimental-strip-types scripts/sync-lead-config.mjs && node scripts/generate-sitemap.mjs",
     "preview": "npx --yes serve dist",
     "start": "npx --yes serve dist",
     "lint": "eslint .",

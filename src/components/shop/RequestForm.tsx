@@ -1,9 +1,9 @@
-import { CheckCircle2, Loader2 } from "lucide-react";
+import { useNavigate } from "@tanstack/react-router";
+import { Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { validateRequest } from "@/lib/request";
 import { sendRequest } from "@/lib/send-request";
-import { PHONE_DISPLAY, PHONE_HREF } from "@/lib/contacts";
 
 const fieldClass =
   "w-full rounded-xl border border-border bg-background px-4 py-3 text-sm outline-none transition-colors placeholder:text-muted-foreground/70 focus:border-lime-deep";
@@ -20,6 +20,7 @@ export function RequestForm({
   /** Предзаполнение поля «Что нужно» (например, карточка товара под заказ). */
   defaultMessage?: string;
 }) {
+  const navigate = useNavigate();
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [company, setCompany] = useState("");
@@ -28,7 +29,7 @@ export function RequestForm({
   useEffect(() => {
     setMessage(defaultMessage);
   }, [defaultMessage]);
-  const [status, setStatus] = useState<"idle" | "sending" | "done">("idle");
+  const [status, setStatus] = useState<"idle" | "sending">("idle");
   const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (event: React.FormEvent) => {
@@ -51,23 +52,8 @@ export function RequestForm({
       return;
     }
 
-    setStatus("done");
+    void navigate({ to: "/zayavka-prinyata" });
   };
-
-  if (status === "done") {
-    return (
-      <div className="rounded-2xl border border-lime-deep/40 bg-lime/10 p-8 text-center">
-        <CheckCircle2 className="mx-auto h-10 w-10 text-lime-deep" />
-        <p className="mt-4 font-display text-lg font-semibold uppercase">Заявка отправлена</p>
-        <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-          Свяжемся с вами в течение 30 минут в рабочее время. Срочный вопрос —{" "}
-          <a href={PHONE_HREF} className="font-semibold text-lime-deep">
-            {PHONE_DISPLAY}
-          </a>
-        </p>
-      </div>
-    );
-  }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">

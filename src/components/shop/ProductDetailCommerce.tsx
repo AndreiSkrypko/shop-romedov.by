@@ -5,7 +5,7 @@ import { toast } from "sonner";
 
 import { ProductMedia } from "@/components/shop/ProductMedia";
 import { QuantityStepper } from "@/components/shop/QuantityStepper";
-import { RequestForm } from "@/components/shop/RequestForm";
+import { RequestFormPanel } from "@/components/shop/RequestFormPanel";
 import { ShopBreadcrumbs } from "@/components/shop/ShopBreadcrumbs";
 import { useCart } from "@/lib/cart-context";
 import {
@@ -200,17 +200,15 @@ export function ProductDetailCommerce({ product, category }: ProductDetailCommer
 
           {showRequest ? (
             <div id="zayavka" className="mt-6 scroll-mt-28">
-              <p className="text-sm leading-relaxed text-muted-foreground">
-                Позиция поставляется под заказ — укажите объём и контакты, менеджер рассчитает срок и
-                стоимость.
-              </p>
-              <div className="mt-4 rounded-lg border border-border bg-secondary/30 p-4 sm:p-5">
-                <RequestForm
-                  compact
-                  source={`product-order:${product.slug}`}
-                  defaultMessage={productRequestDefaultMessage(product)}
-                />
-              </div>
+              <RequestFormPanel
+                compact
+                embedded
+                title="Заявка под заказ"
+                description="Укажите объём и контакты — менеджер рассчитает срок и стоимость."
+                source={`product-order:${product.slug}`}
+                defaultMessage={productRequestDefaultMessage(product)}
+                mobileTriggerLabel="Оставить заявку"
+              />
             </div>
           ) : showCart ? (
           <>

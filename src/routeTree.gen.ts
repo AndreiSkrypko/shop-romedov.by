@@ -15,6 +15,8 @@ import { Route as CheckoutRouteImport } from './routes/checkout'
 import { Route as ContactsRouteImport } from './routes/contacts'
 import { Route as DeliveryRouteImport } from './routes/delivery'
 import { Route as SearchRouteImport } from './routes/search'
+import { Route as ZakazPrinyatRouteImport } from './routes/zakaz-prinyat'
+import { Route as ZayavkaPrinyataRouteImport } from './routes/zayavka-prinyata'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as AdminCategoriesRouteImport } from './routes/admin.categories'
 import { Route as AdminHelpRouteImport } from './routes/admin.help'
@@ -53,6 +55,16 @@ const DeliveryRoute = DeliveryRouteImport.update({
 const SearchRoute = SearchRouteImport.update({
   id: '/search',
   path: '/search',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ZakazPrinyatRoute = ZakazPrinyatRouteImport.update({
+  id: '/zakaz-prinyat',
+  path: '/zakaz-prinyat',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ZayavkaPrinyataRoute = ZayavkaPrinyataRouteImport.update({
+  id: '/zayavka-prinyata',
+  path: '/zayavka-prinyata',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminIndexRoute = AdminIndexRouteImport.update({
@@ -108,6 +120,8 @@ export interface FileRoutesByFullPath {
   '/contacts': typeof ContactsRoute
   '/delivery': typeof DeliveryRoute
   '/search': typeof SearchRoute
+  '/zakaz-prinyat': typeof ZakazPrinyatRoute
+  '/zayavka-prinyata': typeof ZayavkaPrinyataRoute
   '/admin/categories': typeof AdminCategoriesRoute
   '/admin/help': typeof AdminHelpRoute
   '/admin/login': typeof AdminLoginRoute
@@ -125,6 +139,8 @@ export interface FileRoutesByTo {
   '/contacts': typeof ContactsRoute
   '/delivery': typeof DeliveryRoute
   '/search': typeof SearchRoute
+  '/zakaz-prinyat': typeof ZakazPrinyatRoute
+  '/zayavka-prinyata': typeof ZayavkaPrinyataRoute
   '/admin/categories': typeof AdminCategoriesRoute
   '/admin/help': typeof AdminHelpRoute
   '/admin/login': typeof AdminLoginRoute
@@ -143,6 +159,8 @@ export interface FileRoutesById {
   '/contacts': typeof ContactsRoute
   '/delivery': typeof DeliveryRoute
   '/search': typeof SearchRoute
+  '/zakaz-prinyat': typeof ZakazPrinyatRoute
+  '/zayavka-prinyata': typeof ZayavkaPrinyataRoute
   '/admin/categories': typeof AdminCategoriesRoute
   '/admin/help': typeof AdminHelpRoute
   '/admin/login': typeof AdminLoginRoute
@@ -162,6 +180,8 @@ export interface FileRouteTypes {
     | '/contacts'
     | '/delivery'
     | '/search'
+    | '/zakaz-prinyat'
+    | '/zayavka-prinyata'
     | '/admin/categories'
     | '/admin/help'
     | '/admin/login'
@@ -179,6 +199,8 @@ export interface FileRouteTypes {
     | '/contacts'
     | '/delivery'
     | '/search'
+    | '/zakaz-prinyat'
+    | '/zayavka-prinyata'
     | '/admin/categories'
     | '/admin/help'
     | '/admin/login'
@@ -196,6 +218,8 @@ export interface FileRouteTypes {
     | '/contacts'
     | '/delivery'
     | '/search'
+    | '/zakaz-prinyat'
+    | '/zayavka-prinyata'
     | '/admin/categories'
     | '/admin/help'
     | '/admin/login'
@@ -214,6 +238,8 @@ export interface RootRouteChildren {
   ContactsRoute: typeof ContactsRoute
   DeliveryRoute: typeof DeliveryRoute
   SearchRoute: typeof SearchRoute
+  ZakazPrinyatRoute: typeof ZakazPrinyatRoute
+  ZayavkaPrinyataRoute: typeof ZayavkaPrinyataRoute
   AdminCategoriesRoute: typeof AdminCategoriesRoute
   AdminHelpRoute: typeof AdminHelpRoute
   AdminLoginRoute: typeof AdminLoginRoute
@@ -267,6 +293,20 @@ declare module '@tanstack/react-router' {
       path: '/search'
       fullPath: '/search'
       preLoaderRoute: typeof SearchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/zakaz-prinyat': {
+      id: '/zakaz-prinyat'
+      path: '/zakaz-prinyat'
+      fullPath: '/zakaz-prinyat'
+      preLoaderRoute: typeof ZakazPrinyatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/zayavka-prinyata': {
+      id: '/zayavka-prinyata'
+      path: '/zayavka-prinyata'
+      fullPath: '/zayavka-prinyata'
+      preLoaderRoute: typeof ZayavkaPrinyataRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/': {
@@ -342,6 +382,8 @@ const rootRouteChildren: RootRouteChildren = {
   ContactsRoute: ContactsRoute,
   DeliveryRoute: DeliveryRoute,
   SearchRoute: SearchRoute,
+  ZakazPrinyatRoute: ZakazPrinyatRoute,
+  ZayavkaPrinyataRoute: ZayavkaPrinyataRoute,
   AdminCategoriesRoute: AdminCategoriesRoute,
   AdminHelpRoute: AdminHelpRoute,
   AdminLoginRoute: AdminLoginRoute,

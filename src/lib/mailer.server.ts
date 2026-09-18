@@ -1,5 +1,7 @@
 import nodemailer from "nodemailer";
 
+import type { ApiLeadConfig } from "./api-config.server";
+
 export type MailerConfig = {
   emailTo: string;
   emailFrom: string;
@@ -12,26 +14,52 @@ export type MailerConfig = {
   telegramChatId: string;
 };
 
-export function getMailerConfig(): MailerConfig {
-  const smtpHost = process.env["SMTP_HOST"] ?? "";
+export function mailerFromApiConfig(api: ApiLeadConfig): MailerConfig {
+  return {
+    emailTo: api.email_to,
+    emailFrom: api.email_from,
+    smtpHost: api.smtp_host,
+    smtpPort: api.smtp_port,
+    smtpSecure: api.smtp_secure,
+    smtpUser: api.smtp_user,
+    smtpPass: api.smtp_pass,
+    telegramBotToken: api.telegram_bot_token,
+    telegramChatId: api.telegram_chat_id,
+  };
+}
 
-  if (!smtpHost) {
+export function isSmtpConfigured(config: MailerConfig): boolean {
+  return config.smtpHost.trim().length > 0;
+}
+
+export function isTelegramConfigured(config: MailerConfig): boolean {
+  return config.telegramBotToken.trim().length > 0 && config.telegramChatId.trim().length > 0;
+}
+
+const DEV = process.env["NODE_ENV"] !== "production";
+
+/** Почта и дубль в Telegram. На Hoster.by почта — через submit.php + mail(). */
+export async function deliverLeadText(
+  config: MailerConfig,
+  options: { subject: string; text: string; replyTo?: string },
+): Promise<void> {
+  if (!isTelegramConfigured(config)) {
     throw new Error(
-      "Не настроена отправка на почту: укажите SMTP_HOST (и SMTP_USER/SMTP_PASS при необходимости) в .env",
+      "Укажите telegram_bot_token и telegram_chat_id в src/lib/lead-delivery.config.ts или public/api/config.php.",
     );
   }
 
-  return {
-    emailTo: process.env["EMAIL_TO"] ?? "info@romedov.by",
-    emailFrom: process.env["EMAIL_FROM"] ?? "noreply@romedov.by",
-    smtpHost,
-    smtpPort: Number(process.env["SMTP_PORT"] ?? "587"),
-    smtpSecure: process.env["SMTP_SECURE"] === "true",
-    smtpUser: process.env["SMTP_USER"] ?? "",
-    smtpPass: process.env["SMTP_PASS"] ?? "",
-    telegramBotToken: process.env["TELEGRAM_BOT_TOKEN"] ?? "",
-    telegramChatId: process.env["TELEGRAM_CHAT_ID"] ?? "",
-  };
+  if (isSmtpConfigured(config)) {
+    await sendMail(config, options);
+  } else if (DEV) {
+    console.info(`[romedov] Письмо (SMTP не задан, dev):\n${options.subject}\n${options.text}`);
+  } else {
+    throw new Error(
+      "Укажите smtp_host в src/lib/lead-delivery.config.ts для отправки почты в dev-сервере.",
+    );
+  }
+
+  await sendTelegramMessage(config, options.text);
 }
 
 export async function sendMail(
@@ -58,20 +86,16 @@ export async function sendMail(
 export async function sendTelegramMessage(config: MailerConfig, text: string): Promise<void> {
   if (!config.telegramBotToken || !config.telegramChatId) return;
 
-  try {
-    const response = await fetch(
-      `https://api.telegram.org/bot${config.telegramBotToken}/sendMessage`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ chat_id: config.telegramChatId, text }),
-      },
-    );
+  const response = await fetch(
+    `https://api.telegram.org/bot${config.telegramBotToken}/sendMessage`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ chat_id: config.telegramChatId, text }),
+    },
+  );
 
-    if (!response.ok) {
-      console.error("[telegram] sendMessage failed:", await response.text());
-    }
-  } catch (error) {
-    console.error("[telegram] sendMessage threw:", error);
+  if (!response.ok) {
+    console.error("[telegram] sendMessage failed:", await response.text());
   }
 }

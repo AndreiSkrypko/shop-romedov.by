@@ -1,8 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 
 import { Breadcrumbs } from "@/components/shop/Breadcrumbs";
-import { RequestForm } from "@/components/shop/RequestForm";
+import { RequestFormPanel } from "@/components/shop/RequestFormPanel";
 import { Shell } from "@/components/shop/Shell";
+import { WarehouseMap } from "@/components/shop/WarehouseMap";
 import { MailIcon, TelegramIcon, ViberIcon } from "@/components/shop/icons";
 import {
   ACCESS_NOTE,
@@ -49,7 +50,7 @@ function ContactsPage() {
         </p>
 
         <div className="mt-10 grid gap-10 lg:grid-cols-[1fr_1fr] lg:gap-16">
-          <div className="space-y-8">
+          <div className="order-2 space-y-8 lg:order-1">
             <section>
               <h2 className="font-display text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
                 Телефоны
@@ -102,6 +103,7 @@ function ContactsPage() {
               </h2>
               <p className="mt-4 text-base font-medium">{ADDRESS_PRODUCTION}</p>
               <p className="mt-1 text-sm text-muted-foreground">{ACCESS_NOTE}</p>
+              <WarehouseMap className="mt-5" />
             </section>
 
             <section className="rounded-2xl border border-border bg-secondary/40 p-5">
@@ -125,18 +127,13 @@ function ContactsPage() {
             </section>
           </div>
 
-          <div className="rounded-3xl border border-border p-6 sm:p-8">
-            <h2 className="font-display text-xl font-semibold uppercase">
-              Подобрать металлопрокат
-            </h2>
-            <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-              Опишите, что требуется — уточним наличие, сортамент и сроки поставки. Ответим на почту
-              или позвоним, как вам удобнее.
-            </p>
-
-            <div className="mt-6">
-              <RequestForm source="Страница контактов" />
-            </div>
+          <div className="order-1 lg:order-2">
+            <RequestFormPanel
+              title="Подобрать металлопрокат"
+              description="Опишите, что требуется — уточним наличие, сортамент и сроки поставки. Ответим на почту или позвоним, как вам удобнее."
+              source="Страница контактов"
+              mobileTriggerLabel="Подобрать металлопрокат"
+            />
           </div>
         </div>
       </div>

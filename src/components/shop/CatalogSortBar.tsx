@@ -10,7 +10,6 @@ type CatalogSortBarProps = {
 const SORT_BUTTONS: Array<{ key: SortKey; label: string }> = [
   { key: "popular", label: "По популярности" },
   { key: "size-asc", label: "По алфавиту" },
-  { key: "price-asc", label: "По цене" },
 ];
 
 export function CatalogSortBar({ filters, onChange, shown, total }: CatalogSortBarProps) {

@@ -1,15 +1,16 @@
-import { Link, createFileRoute } from "@tanstack/react-router";
-import { CheckCircle2, Loader2 } from "lucide-react";
+import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
+import { Loader2 } from "lucide-react";
 import { useState } from "react";
 
 import { Breadcrumbs } from "@/components/shop/Breadcrumbs";
 import { Shell } from "@/components/shop/Shell";
 import { useCart } from "@/lib/cart-context";
 import { formatPrice, formatQuantity, formatWeight, saleUnitLabel, unitPrice } from "@/lib/catalog";
-import { EMAIL, EMAIL_HREF, PHONE_DISPLAY, PHONE_HREF } from "@/lib/contacts";
+import { PHONE_DISPLAY, PHONE_HREF } from "@/lib/contacts";
 import { CUSTOMER_TYPE_LABELS, DELIVERY_LABELS, validateOrder } from "@/lib/order";
 import type { CustomerType, DeliveryMethod, OrderPayload } from "@/lib/order";
 import { sendOrder } from "@/lib/send-order";
+import { shoppingTrailCrumbs } from "@/lib/last-catalog-path";
 import { buildSeo } from "@/lib/seo";
 
 export const Route = createFileRoute("/checkout")({
@@ -29,6 +30,7 @@ const labelClass =
   "font-display text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground";
 
 function CheckoutPage() {
+  const navigate = useNavigate();
   const { ready, entries, positions, totalPrice, totalWeightKg, clear } = useCart();
 
   const [customerType, setCustomerType] = useState<CustomerType>("person");
@@ -41,9 +43,8 @@ function CheckoutPage() {
   const [address, setAddress] = useState("");
   const [comment, setComment] = useState("");
 
-  const [status, setStatus] = useState<"idle" | "sending" | "done">("idle");
+  const [status, setStatus] = useState<"idle" | "sending">("idle");
   const [error, setError] = useState<string | null>(null);
-  const [orderNumber, setOrderNumber] = useState("");
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -87,53 +88,17 @@ function CheckoutPage() {
       return;
     }
 
-    setOrderNumber(result.orderNumber);
-    setStatus("done");
     clear();
+    void navigate({
+      to: "/zakaz-prinyat",
+      search: result.orderNumber ? { order: result.orderNumber } : {},
+    });
   };
-
-  if (status === "done") {
-    return (
-      <Shell>
-        <div className="mx-auto max-w-2xl px-5 py-16 text-center lg:py-24">
-          <CheckCircle2 className="mx-auto h-14 w-14 text-lime-deep" />
-          <h1 className="mt-6 font-display text-3xl font-semibold uppercase">Заказ принят</h1>
-          {orderNumber ? (
-            <p className="mt-3 font-display text-lg">
-              Номер заказа <span className="text-lime-deep">№{orderNumber}</span>
-            </p>
-          ) : null}
-          <p className="mt-5 text-sm leading-relaxed text-muted-foreground">
-            Менеджер свяжется с вами в течение 30 минут в рабочее время: подтвердит наличие
-            сортамента, итоговую сумму и сроки отгрузки. Если нужно срочно — звоните{" "}
-            <a href={PHONE_HREF} className="font-semibold text-lime-deep">
-              {PHONE_DISPLAY}
-            </a>
-          </p>
-
-          <div className="mt-9 flex flex-wrap justify-center gap-3">
-            <Link
-              to="/catalog"
-              className="rounded-full bg-brand px-8 py-4 font-display text-sm font-semibold uppercase tracking-[0.12em] text-brand-foreground"
-            >
-              Вернуться в каталог
-            </Link>
-            <a
-              href={EMAIL_HREF}
-              className="rounded-full border border-border px-8 py-4 font-display text-sm font-semibold uppercase tracking-[0.12em]"
-            >
-              {EMAIL}
-            </a>
-          </div>
-        </div>
-      </Shell>
-    );
-  }
 
   return (
     <Shell>
       <div className="mx-auto max-w-7xl px-5 py-8 lg:px-8 lg:py-12">
-        <Breadcrumbs items={[{ label: "Оформление заказа", kind: "current" }]} />
+        <Breadcrumbs items={shoppingTrailCrumbs("checkout")} />
 
         <h1 className="mt-6 font-display text-3xl font-semibold uppercase sm:text-4xl">
           Оформление заказа

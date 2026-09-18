@@ -285,8 +285,6 @@ export type SortKey = "popular" | "price-asc" | "price-desc" | "size-asc" | "siz
 
 export const SORT_OPTIONS: Array<{ key: SortKey; label: string }> = [
   { key: "popular", label: "По популярности" },
-  { key: "price-asc", label: "Цена: сначала дешевле" },
-  { key: "price-desc", label: "Цена: сначала дороже" },
   { key: "size-asc", label: "Размер: по возрастанию" },
   { key: "size-desc", label: "Размер: по убыванию" },
 ];
