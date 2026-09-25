@@ -220,11 +220,11 @@ export function ProductForm({
       <label className="block">
         <span className={adminLabelClass}>Название*</span>
         <input className={`${adminFieldClass} mt-1`} value={name} onChange={(e) => setName(e.target.value)} required />
-        {mode === "create" ? (
-          <p className="mt-1 text-[11px] text-muted-foreground">
-            Slug ниже подставится из названия (и артикула, если указан).
-          </p>
-        ) : null}
+        <p className="mt-1 text-[11px] text-muted-foreground">
+          Полное название (карточка товара, SEO). На плитке каталога показывается «Заголовок плитки», если
+          он заполнен.
+          {mode === "create" ? " Slug подставится из названия и артикула." : null}
+        </p>
       </label>
 
       <label className="block">
@@ -406,8 +406,12 @@ export function ProductForm({
       </label>
 
       <label className="block">
-        <span className={adminLabelClass}>Заголовок плитки</span>
+        <span className={adminLabelClass}>Заголовок плитки (на витрине)</span>
         <input className={`${adminFieldClass} mt-1`} value={cardTitle} onChange={(e) => setCardTitle(e.target.value)} />
+        <p className="mt-1 text-[11px] text-muted-foreground">
+          Именно это видят покупатели в сетке каталога. Если пусто — подставится типоразмер или название
+          выше.
+        </p>
       </label>
 
       <div className="rounded-xl border border-border p-4">

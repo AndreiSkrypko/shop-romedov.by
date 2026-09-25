@@ -10,6 +10,7 @@ import {
 } from "@/lib/catalog/fiberglass-visual";
 import type { Product } from "@/lib/catalog/types";
 import { ribbedRebarCatalogArticle } from "@/lib/catalog/ribbed-rebar-images";
+import { productHasCustomImage } from "@/lib/catalog/rebar-visual";
 import { smoothRebarCatalogArticle } from "@/lib/catalog/smooth-rebar-images";
 import { resolvePublicAssetUrl } from "@/lib/utils";
 
@@ -31,10 +32,26 @@ export function AdminCatalogThumb({ product, src, alt = "" }: AdminCatalogThumbP
   const smoothArticle = product ? smoothRebarCatalogArticle(product) : undefined;
 
   const imageUrl = useMemo(() => {
+    if (product && productHasCustomImage(product)) {
+      return resolvePublicAssetUrl(product.image!.trim());
+    }
     const primary = src?.trim();
     if (primary) return resolvePublicAssetUrl(primary);
     return undefined;
-  }, [src]);
+  }, [product, src]);
+
+  if (product && productHasCustomImage(product) && imageUrl && !failed) {
+    return (
+      <img
+        key={imageUrl}
+        src={imageUrl}
+        alt={alt}
+        className={`${frameClass} object-contain`}
+        loading="lazy"
+        onError={() => setFailed(true)}
+      />
+    );
+  }
 
   if (showFiberglass && product) {
     return (

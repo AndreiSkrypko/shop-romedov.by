@@ -18,7 +18,7 @@ import {
 import { requireAdminSession } from "@/lib/admin/require-admin";
 import { useAdminCatalogSnapshot } from "@/lib/admin/useAdminCatalogSnapshot";
 import { adminCardClass } from "@/lib/admin/ui";
-import { formatPrice, productImage, unitPrice } from "@/lib/catalog";
+import { formatPrice, productCardTitle, productImage, unitPrice } from "@/lib/catalog";
 import type { Product } from "@/lib/catalog/types";
 
 type ProductsSearch = {
@@ -103,7 +103,7 @@ function AdminProductsPage() {
         formOpen
           ? panel === "create"
             ? "Новый товар"
-            : (editing?.name ?? "Редактирование товара")
+            : (editing ? productCardTitle(editing) : "Редактирование товара")
           : "Товары"
       }
       subtitle={
@@ -209,13 +209,19 @@ function AdminProductsPage() {
                   />
                   <div className="min-w-0 flex-1">
                     <p className="font-medium leading-snug">
-                      {row.product.name}
+                      {productCardTitle(row.product)}
                       {row.product.popular ? (
                         <span className="ml-2 inline-flex rounded-full bg-brand/25 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-lime-deep">
                           На главной
                         </span>
                       ) : null}
                     </p>
+                    {row.product.cardTitle &&
+                    row.product.cardTitle.trim() !== row.product.name.trim() ? (
+                      <p className="mt-0.5 text-xs text-muted-foreground">
+                        Полное название: {row.product.name}
+                      </p>
+                    ) : null}
                     <AdminProductPath row={row} />
                     <p className="mt-1 text-xs text-muted-foreground">
                       {formatPrice(unitPrice(row.product))}

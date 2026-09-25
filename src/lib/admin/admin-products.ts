@@ -6,6 +6,15 @@ import { ADMIN_RPC_SECRET } from "./constants";
 import type { AdminProductInput } from "./product-input";
 
 function rpcError(error: { message: string; code?: string }, fallback: string): never {
+  if (
+    error.message.includes("Could not find the function") ||
+    error.message.includes("schema cache")
+  ) {
+    throw new Error(
+      "На Supabase (прод) устарели RPC admin_update_product / admin_insert_product. " +
+        "Выполните scripts/supabase-prod-patch-admin-product-rpc.sql в SQL Editor.",
+    );
+  }
   if (error.message.includes("forbidden")) {
     throw new Error("RPC админки не настроен в Supabase (scripts/supabase-admin-rpc.sql)");
   }
