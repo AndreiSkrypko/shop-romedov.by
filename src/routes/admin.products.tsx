@@ -1,6 +1,6 @@
 import { Link, createFileRoute, useRouter } from "@tanstack/react-router";
 import { ExternalLink, Pencil, Plus, Trash2 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
 import { AdminCatalogThumb } from "@/components/admin/AdminCatalogThumb";
@@ -23,6 +23,8 @@ import type { Product } from "@/lib/catalog/types";
 
 type ProductsSearch = {
   category?: string;
+  /** id подкатегории или __none__ — только товары без подкатегории в выбранной категории */
+  sub?: string;
   needsSub?: boolean;
   q?: string;
 };
@@ -31,6 +33,7 @@ export const Route = createFileRoute("/admin/products")({
   beforeLoad: requireAdminSession,
   validateSearch: (search: Record<string, unknown>): ProductsSearch => ({
     category: typeof search.category === "string" ? search.category : undefined,
+    sub: typeof search.sub === "string" && search.sub.length > 0 ? search.sub : undefined,
     needsSub:
       search.needsSub === true || search.needsSub === "true" || search.needsSub === "1",
     q: typeof search.q === "string" ? search.q : undefined,
@@ -45,15 +48,60 @@ export const Route = createFileRoute("/admin/products")({
 function AdminProductsPage() {
   const router = useRouter();
   const { snapshot, loading, error, refresh } = useAdminCatalogSnapshot();
-  const { category: categoryFromUrl, needsSub, q: qFromUrl } = Route.useSearch();
+  const { category: categoryFromUrl, sub: subFromUrl, needsSub, q: qFromUrl } =
+    Route.useSearch();
   const [panel, setPanel] = useState<"none" | "create" | "edit">("none");
   const [editing, setEditing] = useState<Product | null>(null);
   const [filter, setFilter] = useState(qFromUrl ?? "");
   const [categoryFilter, setCategoryFilter] = useState(categoryFromUrl ?? "");
+  const [subcategoryFilter, setSubcategoryFilter] = useState(subFromUrl ?? "");
   const [onlyNeedsSub, setOnlyNeedsSub] = useState(needsSub ?? false);
 
   const categoriesForForm = snapshot?.categories.map((row) => row.category) ?? [];
   const formOpen = panel !== "none";
+
+  const subcategoriesForCategory = useMemo(() => {
+    if (!snapshot || !categoryFilter) return [];
+    return snapshot.subcategories
+      .filter((s) => s.categoryId === categoryFilter)
+      .sort((a, b) => a.order - b.order);
+  }, [snapshot, categoryFilter]);
+
+  useEffect(() => {
+    if (!snapshot || !subFromUrl || categoryFromUrl) return;
+    const sub = snapshot.subcategories.find((s) => s.id === subFromUrl);
+    if (!sub) return;
+    setCategoryFilter(sub.categoryId);
+    setSubcategoryFilter(sub.id);
+  }, [snapshot, subFromUrl, categoryFromUrl]);
+
+  useEffect(() => {
+    setCategoryFilter(categoryFromUrl ?? "");
+    setSubcategoryFilter(subFromUrl ?? "");
+    setOnlyNeedsSub(needsSub ?? false);
+    if (qFromUrl !== undefined) setFilter(qFromUrl);
+  }, [categoryFromUrl, subFromUrl, needsSub, qFromUrl]);
+
+  const pushListSearch = (next: {
+    category?: string;
+    sub?: string;
+    needsSub?: boolean;
+    q?: string;
+  }) => {
+    const category = next.category ?? categoryFilter;
+    const sub = next.sub ?? subcategoryFilter;
+    const needs = next.needsSub ?? onlyNeedsSub;
+    const q = next.q ?? filter;
+    void router.navigate({
+      to: "/admin/products",
+      search: {
+        category: category || undefined,
+        sub: category && sub ? sub : undefined,
+        needsSub: needs || undefined,
+        q: q.trim() || undefined,
+      },
+    });
+  };
 
   const closeForm = () => {
     setPanel("none");
@@ -65,6 +113,11 @@ function AdminProductsPage() {
     const q = filter.trim().toLowerCase();
     return snapshot.products.filter((row) => {
       if (categoryFilter && row.product.categoryId !== categoryFilter) return false;
+      if (subcategoryFilter === "__none__") {
+        if (row.product.subcategoryId) return false;
+      } else if (subcategoryFilter && row.product.subcategoryId !== subcategoryFilter) {
+        return false;
+      }
       if (onlyNeedsSub && row.placement !== "needs_subcategory") return false;
       if (!q) return true;
       return (
@@ -74,7 +127,7 @@ function AdminProductsPage() {
         (row.subcategoryName?.toLowerCase().includes(q) ?? false)
       );
     });
-  }, [filter, snapshot, categoryFilter, onlyNeedsSub]);
+  }, [filter, snapshot, categoryFilter, subcategoryFilter, onlyNeedsSub]);
 
   const handleDelete = async (slug: string, name: string) => {
     if (!confirm(`Удалить «${name}»?`)) return;
@@ -145,17 +198,13 @@ function AdminProductsPage() {
               onChange={(e) => setFilter(e.target.value)}
             />
             <select
-              className="rounded-full border border-border bg-background px-4 py-2 text-sm"
+              className="max-w-[14rem] rounded-full border border-border bg-background px-4 py-2 text-sm"
               value={categoryFilter}
               onChange={(e) => {
-                setCategoryFilter(e.target.value);
-                void router.navigate({
-                  to: "/admin/products",
-                  search: {
-                    category: e.target.value || undefined,
-                    needsSub: onlyNeedsSub || undefined,
-                  },
-                });
+                const value = e.target.value;
+                setCategoryFilter(value);
+                setSubcategoryFilter("");
+                pushListSearch({ category: value, sub: "" });
               }}
             >
               <option value="">Все категории</option>
@@ -165,19 +214,32 @@ function AdminProductsPage() {
                 </option>
               ))}
             </select>
+            {categoryFilter && subcategoriesForCategory.length > 0 ? (
+              <select
+                className="max-w-[16rem] rounded-full border border-border bg-background px-4 py-2 text-sm"
+                value={subcategoryFilter}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  setSubcategoryFilter(value);
+                  pushListSearch({ sub: value });
+                }}
+              >
+                <option value="">Все подкатегории</option>
+                <option value="__none__">Без подкатегории (в категории)</option>
+                {subcategoriesForCategory.map((sub) => (
+                  <option key={sub.id} value={sub.id}>
+                    {sub.name}
+                  </option>
+                ))}
+              </select>
+            ) : null}
             <label className="flex items-center gap-2 rounded-full border border-border px-4 py-2 text-xs">
               <input
                 type="checkbox"
                 checked={onlyNeedsSub}
                 onChange={(e) => {
                   setOnlyNeedsSub(e.target.checked);
-                  void router.navigate({
-                    to: "/admin/products",
-                    search: {
-                      category: categoryFilter || undefined,
-                      needsSub: e.target.checked || undefined,
-                    },
-                  });
+                  pushListSearch({ needsSub: e.target.checked });
                 }}
               />
               Без подкатегории (нужно исправить)

@@ -262,7 +262,7 @@ function AdminSubcategoriesPage() {
                     <td className="px-4 py-3">
                       <Link
                         to="/admin/products"
-                        search={{ category: categoryId, q: sub.slug }}
+                        search={{ category: categoryId, sub: sub.id }}
                         className="text-lime-deep hover:underline"
                       >
                         {countSubcategoryProducts(dbProducts, sub)}
