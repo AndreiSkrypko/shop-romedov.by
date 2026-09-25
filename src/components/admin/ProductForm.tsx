@@ -61,6 +61,9 @@ export function ProductForm({
   const [cardTitle, setCardTitle] = useState(initial?.cardTitle ?? "");
   const [image, setImage] = useState(initial?.image ?? "");
   const [imageFile, setImageFile] = useState<File | null>(null);
+  const [sortOrder, setSortOrder] = useState(
+    initial?.catalogSort != null ? String(initial.catalogSort) : "0",
+  );
   const [isPublished, setIsPublished] = useState(initial?.isPublished ?? true);
   const [slugManual, setSlugManual] = useState(false);
 
@@ -130,6 +133,7 @@ export function ProductForm({
     if (cardTitle) formData.set("cardTitle", cardTitle);
     if (image && !imageFile) formData.set("image", image);
     if (imageFile) formData.set("imageFile", imageFile);
+    formData.set("sortOrder", sortOrder.trim() || "0");
     if (!isPublished) formData.set("isPublished", "false");
 
     try {
@@ -195,6 +199,22 @@ export function ProductForm({
             плитки-фильтры, создайте подкатегории в разделе «Подкатегории».
           </p>
         )}
+
+        <label className="block max-w-xs">
+          <span className={adminLabelClass}>Порядок на витрине</span>
+          <input
+            className={`${adminFieldClass} mt-1`}
+            type="number"
+            min={0}
+            step={1}
+            value={sortOrder}
+            onChange={(e) => setSortOrder(e.target.value)}
+          />
+          <p className="mt-1.5 text-xs text-muted-foreground">
+            При сортировке «По популярности»: меньшее число — выше в списке (1, 2, 3…). Поле «Размер
+            (число)» на порядок не влияет, если порядок задан.
+          </p>
+        </label>
       </fieldset>
 
       <label className="block">
@@ -240,7 +260,10 @@ export function ProductForm({
             onChange={(e) => setDimension(e.target.value)}
             required
           />
-          <p className="mt-1 text-[11px] text-muted-foreground">Тот же размер числом для сортировки: 12, 0.5</p>
+          <p className="mt-1 text-[11px] text-muted-foreground">
+            Толщина/диаметр числом (12, 0.5) — для «похожих» и сортировки по размеру, не для ручного
+            порядка плиток.
+          </p>
         </label>
       </div>
 

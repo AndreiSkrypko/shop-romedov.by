@@ -63,6 +63,7 @@ create or replace function public.admin_insert_product(
   p_article text,
   p_card_title text,
   p_image text,
+  p_sort_order integer,
   p_is_published boolean
 )
 returns bigint
@@ -80,11 +81,12 @@ begin
   insert into public.products (
     slug, category_id, name, size, dimension, steel, gost, length_m, sale_unit,
     weight_kg, price_per_ton, price_per_unit, price_per_meter, meters_per_sale_unit,
-    stock, popular, article, card_title, image, is_published, updated_at
+    stock, popular, article, card_title, image, sort_order, is_published, updated_at
   ) values (
     p_slug, p_category_id, p_name, p_size, p_dimension, p_steel, p_gost, p_length_m, p_sale_unit,
     p_weight_kg, p_price_per_ton, p_price_per_unit, p_price_per_meter, p_meters_per_sale_unit,
-    p_stock, p_popular, p_article, p_card_title, p_image, coalesce(p_is_published, true), now()
+    p_stock, p_popular, p_article, p_card_title, p_image, coalesce(p_sort_order, 0),
+    coalesce(p_is_published, true), now()
   )
   returning id into new_id;
 
@@ -113,6 +115,7 @@ create or replace function public.admin_update_product(
   p_article text,
   p_card_title text,
   p_image text,
+  p_sort_order integer,
   p_is_published boolean
 )
 returns boolean
@@ -144,6 +147,7 @@ begin
     article = p_article,
     card_title = p_card_title,
     image = p_image,
+    sort_order = coalesce(p_sort_order, sort_order),
     is_published = coalesce(p_is_published, true),
     updated_at = now()
   where slug = p_slug;
@@ -309,11 +313,11 @@ $$;
 grant execute on function public.admin_list_products(text) to anon, authenticated;
 grant execute on function public.admin_insert_product(
   text, text, text, text, text, numeric, text, text, numeric, text, numeric,
-  numeric, numeric, numeric, numeric, text, boolean, text, text, text, boolean
+  numeric, numeric, numeric, numeric, text, boolean, text, text, text, integer, boolean
 ) to anon, authenticated;
 grant execute on function public.admin_update_product(
   text, text, text, text, text, numeric, text, text, numeric, text, numeric,
-  numeric, numeric, numeric, numeric, text, boolean, text, text, text, boolean
+  numeric, numeric, numeric, numeric, text, boolean, text, text, text, integer, boolean
 ) to anon, authenticated;
 grant execute on function public.admin_delete_product(text, text) to anon, authenticated;
 

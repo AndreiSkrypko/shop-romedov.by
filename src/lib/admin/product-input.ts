@@ -44,6 +44,7 @@ export const adminProductSchema = z.object({
   article: z.preprocess(emptyToUndefined, z.string().trim().max(40).optional()),
   cardTitle: z.preprocess(emptyToUndefined, z.string().trim().max(200).optional()),
   image: z.preprocess(emptyToUndefined, z.string().trim().max(200).optional()),
+  sortOrder: z.coerce.number().int().min(0).max(99999).default(0),
   isPublished: z.preprocess((v) => v !== false && v !== "false", z.boolean()).default(true),
 });
 

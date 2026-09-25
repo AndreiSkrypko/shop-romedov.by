@@ -41,6 +41,7 @@ function productRpcPayload(input: AdminProductInput) {
     p_article: input.article ?? null,
     p_card_title: input.cardTitle ?? null,
     p_image: input.image ?? null,
+    p_sort_order: input.sortOrder,
     p_is_published: input.isPublished,
   };
 }
