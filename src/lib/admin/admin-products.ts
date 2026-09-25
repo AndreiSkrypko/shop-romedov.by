@@ -11,8 +11,9 @@ function rpcError(error: { message: string; code?: string }, fallback: string): 
     error.message.includes("schema cache")
   ) {
     throw new Error(
-      "На Supabase (прод) устарели RPC admin_update_product / admin_insert_product. " +
-        "Выполните scripts/supabase-prod-patch-admin-product-rpc.sql в SQL Editor.",
+      "Товар не сохраняется: в Supabase не обновлены функции admin_update_product / admin_insert_product " +
+        "(категории при этом работают). Supabase → SQL Editor → выполните целиком файл " +
+        "scripts/supabase-prod-patch-admin-product-rpc.sql из репозитория, подождите 30 сек и сохраните снова.",
     );
   }
   if (error.message.includes("forbidden")) {

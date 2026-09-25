@@ -1,5 +1,10 @@
--- Прод: ошибка «Could not find the function public.admin_update_product(… p_sort_order … p_subcategory_id …)»
--- Выполните в Supabase → SQL Editor (прод-проект). Безопасно повторять.
+-- Прод: не сохраняются товары / фото («Could not find the function admin_update_product…»).
+-- Категории при этом работают — у них другие RPC в базе.
+--
+-- 1) Supabase Dashboard → проект магазина (тот же, что VITE_SUPABASE_URL на проде)
+-- 2) SQL Editor → New query → вставить ВЕСЬ этот файл → Run
+-- 3) Подождать ~30 сек, в админке снова «Сохранить»
+-- Безопасно повторять.
 
 alter table public.products
   add column if not exists subcategory_id text references public.subcategories (id) on delete set null;
@@ -45,8 +50,8 @@ create or replace function public.admin_insert_product(
   p_article text,
   p_card_title text,
   p_image text,
-  p_sort_order integer,
-  p_is_published boolean
+  p_sort_order integer default null,
+  p_is_published boolean default true
 )
 returns bigint
 language plpgsql
@@ -98,8 +103,8 @@ create or replace function public.admin_update_product(
   p_article text,
   p_card_title text,
   p_image text,
-  p_sort_order integer,
-  p_is_published boolean
+  p_sort_order integer default null,
+  p_is_published boolean default true
 )
 returns boolean
 language plpgsql
