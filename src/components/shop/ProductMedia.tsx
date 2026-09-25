@@ -6,7 +6,7 @@ import {
   fiberglassDiagramKind,
   shouldShowFiberglassPlaceholder,
 } from "@/lib/catalog/fiberglass-visual";
-import { shouldShowRebarDiagram } from "@/lib/catalog/rebar-visual";
+import { productHasCustomImage, shouldShowRebarDiagram } from "@/lib/catalog/rebar-visual";
 
 import { FiberglassDiagramImage } from "./FiberglassDiagramImage";
 import { RebarDiagramImage } from "./RebarDiagramImage";
@@ -23,12 +23,56 @@ type ProductMediaProps = {
 const detailFrameClass =
   "relative flex aspect-[4/3] w-full items-center justify-center overflow-hidden sm:aspect-square lg:min-h-[28rem]";
 
+function CustomProductPhoto({
+  product,
+  variant,
+  className,
+  imgClassName,
+}: ProductMediaProps) {
+  if (variant === "detail") {
+    return (
+      <div className={`${detailFrameClass} bg-white ${className}`}>
+        <img
+          src={productImage(product)}
+          alt={product.name}
+          decoding="async"
+          className={
+            imgClassName ||
+            "size-full scale-[1.08] object-contain sm:scale-[1.12]"
+          }
+        />
+      </div>
+    );
+  }
+
+  return (
+    <img
+      src={productImage(product)}
+      alt={product.name}
+      loading="lazy"
+      decoding="async"
+      className={imgClassName}
+    />
+  );
+}
+
 export function ProductMedia({
   product,
   variant = "detail",
   className = "",
   imgClassName = "",
 }: ProductMediaProps) {
+  if (productHasCustomImage(product)) {
+    return (
+      <CustomProductPhoto
+        product={product}
+        variant={variant}
+        className={className}
+        imgClassName={imgClassName}
+      />
+    );
+  }
+
   if (shouldShowFiberglassPlaceholder(product)) {
     if (variant === "card") {
       return (

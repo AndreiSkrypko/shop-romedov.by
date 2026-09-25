@@ -13,6 +13,16 @@ const REBAR_DIAGRAM_PLACEHOLDER_IMAGES = new Set([
   "/products/rebar-smooth.webp",
 ]);
 
+/** Своё фото из админки (Supabase и т.п.) — не подменяем иллюстрацией арматуры. */
+export function productHasCustomImage(product: Product): boolean {
+  const img = product.image?.trim();
+  if (!img) return false;
+  if (isRibbedRebarCatalogImage(img)) return false;
+  if (isSmoothRebarCatalogImage(img)) return false;
+  if (REBAR_DIAGRAM_PLACEHOLDER_IMAGES.has(img)) return false;
+  return true;
+}
+
 export function isSmoothRebarDiagram(product: Product): boolean {
   return product.categoryId === REBAR_SMOOTH_CATEGORY_ID;
 }

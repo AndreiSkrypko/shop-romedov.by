@@ -5,6 +5,7 @@ import {
   shouldShowFiberglassPlaceholder,
 } from "./fiberglass-visual";
 import { ribbedRebarCatalogImagePath } from "./ribbed-rebar-images";
+import { productHasCustomImage } from "./rebar-visual";
 import { smoothRebarCatalogImagePath } from "./smooth-rebar-images";
 import { resolvePublicAssetUrl } from "@/lib/utils";
 import { PRODUCTS } from "./products";
@@ -64,6 +65,11 @@ export async function getProductsByCategoryAsync(categoryId: CategoryId): Promis
 }
 
 export function productImage(product: Product): string {
+  const custom = product.image?.trim();
+  if (custom && productHasCustomImage(product)) {
+    return resolvePublicAssetUrl(custom);
+  }
+
   const ribbedArt = ribbedRebarCatalogImagePath(product);
   if (ribbedArt) return resolvePublicAssetUrl(ribbedArt);
 
