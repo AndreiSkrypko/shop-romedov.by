@@ -7,8 +7,8 @@ export type ContactPhone = {
 
 /** Основной номер — шапка, кнопки «Позвонить», мессенджеры. */
 const PRIMARY_PHONE: ContactPhone = {
-  display: "+375 33 399 57 73",
-  href: "tel:+375333995773",
+  display: "+375 33 917 57 73",
+  href: "tel:+375339175773",
 };
 
 /** Три линии в футере и на /contacts (порядок: администрация → маркетинг → транспорт). */
@@ -19,9 +19,9 @@ export const PHONES: ContactPhone[] = [
     href: "tel:+375339118484",
   },
   {
-    label: "Маркетинг",
-    display: "+375 33 399 57 73",
-    href: "tel:+375333995773",
+    label: "Магазин",
+    display: "+375 33 917 57 73",
+    href: "tel:+375339175773",
   },
   {
     label: "Транспорт",
@@ -35,8 +35,8 @@ export const PHONE_HREF = PRIMARY_PHONE.href;
 
 export const EMAIL = "info@romedov.by";
 export const EMAIL_HREF = `mailto:${EMAIL}`;
-export const TELEGRAM_HREF = "https://t.me/+375333995773";
-export const VIBER_HREF = "viber://chat?number=%2B375333995773";
+export const TELEGRAM_HREF = "https://t.me/+375339175773";
+export const VIBER_HREF = "viber://chat?number=%2B375339175773";
 
 export const ADDRESS_LEGAL =
   "Республика Беларусь, 220047, г. Минск, ул. Герасименко, д. 1А, кв. 168";
