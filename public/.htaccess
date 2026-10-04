@@ -5,10 +5,12 @@
 
   RewriteRule ^api/ - [L]
 
+  # Каталог/товар — всегда SPA (новые slug из Supabase без пересборки).
+  # Правила выше проверки -d: иначе пустая папка prerender (0-byte index.html) даёт белый экран.
+  RewriteRule ^catalog/[^/]+/?$ /index.html [L]
+  RewriteRule ^product/[^/]+/?$ /index.html [L]
+
   RewriteCond %{REQUEST_FILENAME} -f [OR]
   RewriteCond %{REQUEST_FILENAME} -d
   RewriteRule ^ - [L]
-
-  RewriteRule ^catalog/[^/]+/?$ /index.html [L]
-  RewriteRule ^product/[^/]+/?$ /index.html [L]
 </IfModule>
