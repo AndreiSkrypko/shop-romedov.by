@@ -13,7 +13,8 @@ function rpcError(error: { message: string; code?: string }, fallback: string): 
     throw new Error(
       "Товар не сохраняется: в Supabase не обновлены функции admin_update_product / admin_insert_product " +
         "(категории при этом работают). Supabase → SQL Editor → выполните целиком файл " +
-        "scripts/supabase-prod-patch-admin-product-rpc.sql из репозитория, подождите 30 сек и сохраните снова.",
+        "scripts/supabase-prod-patch-product-price-display.sql (или supabase-prod-patch-admin-product-rpc.sql), " +
+        "подождите 30 сек и сохраните снова.",
     );
   }
   if (error.message.includes("forbidden")) {
@@ -46,6 +47,8 @@ function productRpcPayload(input: AdminProductInput) {
     p_price_per_unit: input.pricePerUnit,
     p_price_per_meter: input.pricePerMeter,
     p_meters_per_sale_unit: input.metersPerSaleUnit,
+    p_price_display_mode: input.priceDisplayMode,
+    p_price_custom_label: input.priceCustomLabel?.trim() || null,
     p_stock: input.stock,
     p_popular: input.popular,
     p_article: input.article ?? null,

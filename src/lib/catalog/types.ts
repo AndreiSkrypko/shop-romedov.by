@@ -7,6 +7,9 @@ export type ProductSource = "static" | "db";
 /** in — в наличии, out — нет в наличии, order — под заказ */
 export type StockState = "in" | "out" | "order";
 
+/** Как показывать цену на витрине (админка). */
+export type PriceDisplayMode = "priced" | "on_request" | "custom";
+
 /** id категории: из кода или из Supabase (произвольная строка). */
 export type CategoryId = string;
 
@@ -75,5 +78,9 @@ export type Product = {
   pricePerMeter?: number | null;
   /** Метров в одной единице продажи (бухта, упаковка). */
   metersPerSaleUnit?: number | null;
+  /** priced — числовая цена; on_request / custom — текст вместо суммы, без корзины. */
+  priceDisplayMode?: PriceDisplayMode;
+  /** Свой текст на витрине, если priceDisplayMode === custom. */
+  priceCustomLabel?: string;
   isPublished: boolean;
 };

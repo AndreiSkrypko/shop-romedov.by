@@ -18,7 +18,6 @@ export const Route = createFileRoute("/admin/login")({
   }),
   component: AdminLoginPage,
 });
-
 const fieldClass =
   "w-full rounded-xl border border-border bg-background px-4 py-3 text-sm outline-none transition-colors placeholder:text-muted-foreground/70 focus:border-lime-deep";
 const labelClass =
@@ -97,3 +96,4 @@ function AdminLoginPage() {
     </div>
   );
 }
+

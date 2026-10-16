@@ -1,4 +1,4 @@
-import type { CategoryId, SaleUnit, StockState } from "@/lib/catalog/types";
+import type { CategoryId, PriceDisplayMode, SaleUnit, StockState } from "@/lib/catalog/types";
 
 export type CategoryRow = {
   id: string;
@@ -44,6 +44,8 @@ export type ProductRow = {
   price_per_unit: number | null;
   price_per_meter: number | null;
   meters_per_sale_unit: number | null;
+  price_display_mode?: PriceDisplayMode | null;
+  price_custom_label?: string | null;
   stock: StockState;
   popular: boolean;
   article: string | null;

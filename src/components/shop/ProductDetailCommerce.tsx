@@ -21,7 +21,10 @@ import {
   clampOrderQuantity,
   minQuantity,
   productIsOnOrder,
+  productNeedsPriceRequest,
+  productPublicPriceLabel,
   productRequestDefaultMessage,
+  productShowsNumericPrice,
   quantityStep,
   saleUnitLabelForProduct,
   stockStatusInlineClass,
@@ -48,7 +51,9 @@ export function ProductDetailCommerce({ product, category }: ProductDetailCommer
   const dualUnit = product.saleUnit === "боб" && metersPerUnit > 1;
   const byMeter = product.saleUnit === "м";
   const showCart = canAddProductToCart(product);
-  const showRequest = productIsOnOrder(product);
+  const showRequest = productNeedsPriceRequest(product);
+  const priceLabel = productPublicPriceLabel(product);
+  const showsNumericPrice = productShowsNumericPrice(product);
 
   const [qtyUnits, setQtyUnits] = useState(1);
   const [qtyMeters, setQtyMeters] = useState(byMeter ? 1 : metersPerUnit);
@@ -113,11 +118,14 @@ export function ProductDetailCommerce({ product, category }: ProductDetailCommer
     ...(product.lengthM !== null
       ? ([[lengthSpecLabel, `${formatDecimal(product.lengthM)} м`]] as Array<[string, string]>)
       : []),
-    ...(product.pricePerMeter != null
+    ...(showsNumericPrice && product.pricePerMeter != null
       ? ([["Цена за метр", formatPriceByn(product.pricePerMeter)]] as Array<[string, string]>)
       : []),
     ["Наличие", stockStatusLabel(product.stock)],
-    ...(ton !== null ? ([["Цена за тонну", formatPrice(ton)]] as Array<[string, string]>) : []),
+    ...(showsNumericPrice && ton !== null
+      ? ([["Цена за тонну", formatPrice(ton)]] as Array<[string, string]>)
+      : []),
+    ...(priceLabel ? ([["Цена", priceLabel]] as Array<[string, string]>) : []),
   ];
 
   return (
@@ -146,25 +154,31 @@ export function ProductDetailCommerce({ product, category }: ProductDetailCommer
 
           <div className="mt-4 flex items-start justify-between gap-4">
             <div>
-              <p className="text-3xl font-bold tracking-tight">{formatPriceByn(cardPrice.value)}</p>
-              {product.pricePerMeter != null && (dualUnit || isFiberglassRod(product)) ? (
-                <p className="mt-1 text-sm text-muted-foreground">/ м</p>
-              ) : ton !== null && byMeter ? (
-                <p className="mt-1 text-sm text-muted-foreground">
-                  {formatPriceByn(pricePerMeterLine ?? unitPrice(product))} / м
-                </p>
+              {priceLabel ? (
+                <p className="text-2xl font-bold tracking-tight text-foreground">{priceLabel}</p>
               ) : (
-                <p className="mt-1 text-sm text-muted-foreground">/ {cardPrice.unitLabel}</p>
+                <>
+                  <p className="text-3xl font-bold tracking-tight">{formatPriceByn(cardPrice.value)}</p>
+                  {product.pricePerMeter != null && (dualUnit || isFiberglassRod(product)) ? (
+                    <p className="mt-1 text-sm text-muted-foreground">/ м</p>
+                  ) : ton !== null && byMeter ? (
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      {formatPriceByn(pricePerMeterLine ?? unitPrice(product))} / м
+                    </p>
+                  ) : (
+                    <p className="mt-1 text-sm text-muted-foreground">/ {cardPrice.unitLabel}</p>
+                  )}
+                  {dualUnit && product.pricePerUnit != null ? (
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      {formatPriceByn(pricePerPackage)} / {unit}
+                    </p>
+                  ) : isFiberglassRod(product) && product.pricePerUnit != null ? (
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      {formatPriceByn(product.pricePerUnit)} / {unit}
+                    </p>
+                  ) : null}
+                </>
               )}
-              {dualUnit && product.pricePerUnit != null ? (
-                <p className="mt-1 text-sm text-muted-foreground">
-                  {formatPriceByn(pricePerPackage)} / {unit}
-                </p>
-              ) : isFiberglassRod(product) && product.pricePerUnit != null ? (
-                <p className="mt-1 text-sm text-muted-foreground">
-                  {formatPriceByn(product.pricePerUnit)} / {unit}
-                </p>
-              ) : null}
             </div>
             <div className="flex gap-2 text-muted-foreground">
               <button
@@ -203,8 +217,12 @@ export function ProductDetailCommerce({ product, category }: ProductDetailCommer
               <RequestFormPanel
                 compact
                 embedded
-                title="Заявка под заказ"
-                description="Укажите объём и контакты — менеджер рассчитает срок и стоимость."
+                title={productIsOnOrder(product) ? "Заявка под заказ" : "Узнать цену"}
+                description={
+                  productIsOnOrder(product)
+                    ? "Укажите объём и контакты — менеджер рассчитает срок и стоимость."
+                    : "Оставьте контакты и объём — менеджер пришлёт расчёт."
+                }
                 source={`product-order:${product.slug}`}
                 defaultMessage={productRequestDefaultMessage(product)}
                 mobileTriggerLabel="Оставить заявку"

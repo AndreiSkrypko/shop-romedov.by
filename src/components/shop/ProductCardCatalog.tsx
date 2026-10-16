@@ -13,6 +13,8 @@ import {
   minQuantity,
   productCardTitle,
   productIsOnOrder,
+  productNeedsPriceRequest,
+  productPublicPriceLabel,
   stockStatusInlineClass,
   stockStatusLabel,
 } from "@/lib/catalog";
@@ -28,6 +30,8 @@ export function ProductCardCatalog({ product }: { product: Product }) {
   const inStock = isProductInStock(product);
   const onOrder = productIsOnOrder(product);
   const canAdd = canAddProductToCart(product);
+  const priceLabel = productPublicPriceLabel(product);
+  const showPriceRequest = productNeedsPriceRequest(product);
 
   const handleAdd = () => {
     add(product.slug, minQuantity(product));
@@ -51,36 +55,41 @@ export function ProductCardCatalog({ product }: { product: Product }) {
         />
       </Link>
 
-      <div className="flex flex-1 flex-col border-t border-border p-4">
-        <h3 className="min-h-[2.75rem] text-center text-sm font-medium leading-snug">
-          <Link
-            to="/product/$slug"
-            params={{ slug: product.slug }}
-            className="hover:text-lime-deep"
-          >
-            {productCardTitle(product)}
-          </Link>
-        </h3>
+      <div className="flex min-h-0 flex-1 flex-col border-t border-border p-4">
+        <div className="flex flex-1 flex-col">
+          <h3 className="line-clamp-4 text-center text-sm font-medium leading-snug">
+            <Link
+              to="/product/$slug"
+              params={{ slug: product.slug }}
+              className="hover:text-lime-deep"
+            >
+              {productCardTitle(product)}
+            </Link>
+          </h3>
 
-        <div className="mt-3 flex items-center justify-between gap-2 text-xs text-muted-foreground">
-          {product.article ? <span>Арт. {product.article}</span> : <span />}
-          <span className={stockStatusInlineClass(product.stock)}>
-            {stockStatusLabel(product.stock)}
-          </span>
+          <div className="mt-3 flex items-center justify-between gap-2 text-xs text-muted-foreground">
+            {product.article ? <span>Арт. {product.article}</span> : <span />}
+            <span className={stockStatusInlineClass(product.stock)}>
+              {stockStatusLabel(product.stock)}
+            </span>
+          </div>
         </div>
 
-        {SHOW_PRICES && canAdd ? (
-          <p className="mt-3 text-center">
-            <span className="text-lg font-bold text-foreground">{formatPriceByn(cardPrice)}</span>
-            <span className="text-sm text-muted-foreground"> /{unitLabel}</span>
-          </p>
-        ) : (
-          <p className="mt-3 text-center text-sm font-semibold text-muted-foreground">
-            {inStock ? "Цена по запросу" : "Узнать цену"}
-          </p>
-        )}
+        <div className="mt-auto shrink-0 pt-3">
+          {SHOW_PRICES && canAdd ? (
+            <p className="min-h-[1.75rem] text-center">
+              <span className="text-lg font-bold text-foreground">{formatPriceByn(cardPrice)}</span>
+              <span className="text-sm text-muted-foreground"> /{unitLabel}</span>
+            </p>
+          ) : (
+            <p className="min-h-[1.75rem] text-center text-sm font-semibold text-muted-foreground">
+              {priceLabel ?? (inStock ? "Цена по запросу" : "Узнать цену")}
+            </p>
+          )}
 
-        <div className={`mt-4 grid gap-2 ${canAdd || onOrder ? "grid-cols-2" : "grid-cols-1"}`}>
+          <div
+            className={`mt-4 grid gap-2 ${canAdd || showPriceRequest ? "grid-cols-2" : "grid-cols-1"}`}
+          >
           {canAdd ? (
             <button
               type="button"
@@ -91,7 +100,7 @@ export function ProductCardCatalog({ product }: { product: Product }) {
             >
               {justAdded ? <Check className="h-4 w-4" /> : null}В корзину
             </button>
-          ) : onOrder ? (
+          ) : showPriceRequest ? (
             <Link
               to="/product/$slug"
               params={{ slug: product.slug }}
@@ -99,7 +108,7 @@ export function ProductCardCatalog({ product }: { product: Product }) {
               resetScroll={false}
               className="flex h-10 items-center justify-center rounded-md bg-brand text-sm font-semibold text-brand-foreground transition-colors hover:bg-brand/90"
             >
-              Заявка
+              {onOrder ? "Заявка" : "Узнать цену"}
             </Link>
           ) : null}
           <Link
@@ -107,8 +116,9 @@ export function ProductCardCatalog({ product }: { product: Product }) {
             params={{ slug: product.slug }}
             className="flex h-10 items-center justify-center rounded-md border border-border bg-secondary/80 text-sm font-medium text-foreground transition-colors hover:border-lime-deep"
           >
-            {onOrder ? "Подробнее" : "Просмотр"}
+            {showPriceRequest ? "Подробнее" : "Просмотр"}
           </Link>
+          </div>
         </div>
       </div>
     </article>

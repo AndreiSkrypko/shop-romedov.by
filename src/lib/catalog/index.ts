@@ -15,7 +15,14 @@ import {
   resolveProduct,
   resolveProductAsync,
 } from "./repository";
-import type { Category, CategoryId, Product, SaleUnit, StockState } from "./types";
+import type {
+  Category,
+  CategoryId,
+  PriceDisplayMode,
+  Product,
+  SaleUnit,
+  StockState,
+} from "./types";
 
 export { CATEGORIES, CATEGORIES_BY_ORDER, findCategoryBySlug, getCategoryById };
 export {
@@ -94,6 +101,27 @@ export function productCardTitle(product: Product): string {
   return product.cardTitle ?? product.name;
 }
 
+export const DEFAULT_PRICE_ON_REQUEST_LABEL = "Цена по запросу";
+
+export function productPriceDisplayMode(product: Product): PriceDisplayMode {
+  return product.priceDisplayMode ?? "priced";
+}
+
+export function productShowsNumericPrice(product: Product): boolean {
+  return productPriceDisplayMode(product) === "priced";
+}
+
+/** Текст вместо суммы на витрине; null — показываем числовую цену. */
+export function productPublicPriceLabel(product: Product): string | null {
+  const mode = productPriceDisplayMode(product);
+  if (mode === "on_request") return DEFAULT_PRICE_ON_REQUEST_LABEL;
+  if (mode === "custom") {
+    const text = product.priceCustomLabel?.trim();
+    return text || DEFAULT_PRICE_ON_REQUEST_LABEL;
+  }
+  return null;
+}
+
 /** Цена и единица для плитки каталога (приоритет — цена за метр). */
 export function catalogCardPrice(product: Product): { value: number; unitLabel: string } {
   if (product.pricePerMeter != null) {
@@ -104,6 +132,8 @@ export function catalogCardPrice(product: Product): { value: number; unitLabel: 
   }
   return { value: unitPrice(product), unitLabel: saleUnitLabel(product.saleUnit) };
 }
+
+export { categoryIsMetiz, subcategoryIsMetiz } from "./metiz-category";
 
 export { fetchPopularProductsFromSupabase as getPopularProductsAsync } from "@/lib/supabase/queries";
 
@@ -203,11 +233,18 @@ export function productIsOnOrder(product: Product): boolean {
 /** Корзина только для «В наличии» и при указанной цене. */
 export function canAddProductToCart(product: Product): boolean {
   if (!isProductInStock(product)) return false;
+  if (!productShowsNumericPrice(product)) return false;
   return (
     product.pricePerMeter != null ||
     product.pricePerTon != null ||
     product.pricePerUnit != null
   );
+}
+
+/** Заявка вместо корзины: под заказ или «цена по запросу» при наличии. */
+export function productNeedsPriceRequest(product: Product): boolean {
+  if (productIsOnOrder(product)) return true;
+  return isProductInStock(product) && productPublicPriceLabel(product) !== null;
 }
 
 export function productRequestDefaultMessage(product: Product): string {

@@ -3,7 +3,15 @@ import { useEffect, useMemo, useState } from "react";
 
 import { adminProductSlugFromName } from "@/lib/admin/slug";
 import { adminFieldClass, adminLabelClass } from "@/lib/admin/ui";
-import type { Category, Product, SaleUnit, StockState, Subcategory } from "@/lib/catalog/types";
+import type {
+  Category,
+  PriceDisplayMode,
+  Product,
+  SaleUnit,
+  StockState,
+  Subcategory,
+} from "@/lib/catalog/types";
+import { categoryIsMetiz, DEFAULT_PRICE_ON_REQUEST_LABEL, subcategoryIsMetiz } from "@/lib/catalog";
 
 const SALE_UNITS: SaleUnit[] = ["м", "лист", "шт", "карта", "боб"];
 
@@ -52,6 +60,10 @@ export function ProductForm({
   const [pricePerMeter, setPricePerMeter] = useState(
     initial?.pricePerMeter != null ? String(initial.pricePerMeter) : "",
   );
+  const [priceDisplayMode, setPriceDisplayMode] = useState<PriceDisplayMode>(
+    initial?.priceDisplayMode ?? "priced",
+  );
+  const [priceCustomLabel, setPriceCustomLabel] = useState(initial?.priceCustomLabel ?? "");
   const [metersPerSaleUnit, setMetersPerSaleUnit] = useState(
     initial?.metersPerSaleUnit != null ? String(initial.metersPerSaleUnit) : "",
   );
@@ -85,6 +97,14 @@ export function ProductForm({
     if (mode !== "create" || !name.trim() || slugManual) return;
     setSlug(adminProductSlugFromName(name, article));
   }, [name, article, mode, slugManual]);
+
+  useEffect(() => {
+    if (mode !== "create") return;
+    const sub = subcategoriesForCategory.find((s) => s.id === subcategoryId);
+    const metiz =
+      (category && categoryIsMetiz(category)) || (sub != null && subcategoryIsMetiz(sub));
+    if (metiz) setPriceDisplayMode("on_request");
+  }, [mode, category, subcategoryId, subcategoriesForCategory]);
 
   const fillCategoryImage = () => {
     if (category) setImage(category.image);
@@ -127,6 +147,10 @@ export function ProductForm({
     if (pricePerUnit) formData.set("pricePerUnit", pricePerUnit);
     if (pricePerMeter) formData.set("pricePerMeter", pricePerMeter);
     if (metersPerSaleUnit) formData.set("metersPerSaleUnit", metersPerSaleUnit);
+    formData.set("priceDisplayMode", priceDisplayMode);
+    if (priceDisplayMode === "custom" && priceCustomLabel.trim()) {
+      formData.set("priceCustomLabel", priceCustomLabel.trim());
+    }
     formData.set("stock", stock);
     formData.set("popular", popular ? "true" : "false");
     if (article) formData.set("article", article);
@@ -324,13 +348,78 @@ export function ProductForm({
         </label>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-3">
+      <fieldset className="space-y-3 rounded-xl border border-border bg-muted/20 p-4">
+        <legend className="px-1 font-display text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+          Цена на витрине
+        </legend>
+        <div className="flex flex-col gap-2 text-sm">
+          <label className="flex cursor-pointer items-start gap-2">
+            <input
+              type="radio"
+              name="priceDisplayMode"
+              className="mt-1"
+              checked={priceDisplayMode === "priced"}
+              onChange={() => setPriceDisplayMode("priced")}
+            />
+            <span>
+              <span className="font-medium">Числовая цена</span>
+              <span className="mt-0.5 block text-xs text-muted-foreground">
+                Укажите поля ниже — товар можно добавить в корзину.
+              </span>
+            </span>
+          </label>
+          <label className="flex cursor-pointer items-start gap-2">
+            <input
+              type="radio"
+              name="priceDisplayMode"
+              className="mt-1"
+              checked={priceDisplayMode === "on_request"}
+              onChange={() => setPriceDisplayMode("on_request")}
+            />
+            <span>
+              <span className="font-medium">По запросу</span>
+              <span className="mt-0.5 block text-xs text-muted-foreground">
+                На сайте: «{DEFAULT_PRICE_ON_REQUEST_LABEL}», заявка вместо корзины (метизы и т.п.).
+              </span>
+            </span>
+          </label>
+          <label className="flex cursor-pointer items-start gap-2">
+            <input
+              type="radio"
+              name="priceDisplayMode"
+              className="mt-1"
+              checked={priceDisplayMode === "custom"}
+              onChange={() => setPriceDisplayMode("custom")}
+            />
+            <span>
+              <span className="font-medium">Свой текст вместо цены</span>
+            </span>
+          </label>
+        </div>
+        {priceDisplayMode === "custom" ? (
+          <label className="block">
+            <span className={adminLabelClass}>Текст на витрине</span>
+            <input
+              className={`${adminFieldClass} mt-1`}
+              value={priceCustomLabel}
+              onChange={(e) => setPriceCustomLabel(e.target.value)}
+              placeholder="Например: Договорная"
+              maxLength={120}
+            />
+          </label>
+        ) : null}
+      </fieldset>
+
+      <div
+        className={`grid gap-4 sm:grid-cols-3 ${priceDisplayMode !== "priced" ? "pointer-events-none opacity-50" : ""}`}
+      >
         <label className="block">
           <span className={adminLabelClass}>Цена/тонна</span>
           <input
             className={`${adminFieldClass} mt-1`}
             value={pricePerTon}
             onChange={(e) => setPricePerTon(e.target.value)}
+            disabled={priceDisplayMode !== "priced"}
           />
         </label>
         <label className="block">
@@ -339,6 +428,7 @@ export function ProductForm({
             className={`${adminFieldClass} mt-1`}
             value={pricePerUnit}
             onChange={(e) => setPricePerUnit(e.target.value)}
+            disabled={priceDisplayMode !== "priced"}
           />
         </label>
         <label className="block">
@@ -347,9 +437,15 @@ export function ProductForm({
             className={`${adminFieldClass} mt-1`}
             value={pricePerMeter}
             onChange={(e) => setPricePerMeter(e.target.value)}
+            disabled={priceDisplayMode !== "priced"}
           />
         </label>
       </div>
+      {priceDisplayMode !== "priced" ? (
+        <p className="text-xs text-muted-foreground">
+          Числовые цены можно не заполнять — на сайте покупатель увидит текст и форму заявки.
+        </p>
+      ) : null}
 
       {saleUnit === "боб" ? (
         <label className="block">

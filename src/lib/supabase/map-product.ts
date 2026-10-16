@@ -21,6 +21,8 @@ export function mapProductRow(row: ProductRow): Product {
     pricePerMeter: row.price_per_meter === null ? null : Number(row.price_per_meter),
     metersPerSaleUnit:
       row.meters_per_sale_unit === null ? null : Number(row.meters_per_sale_unit),
+    priceDisplayMode: row.price_display_mode ?? "priced",
+    priceCustomLabel: row.price_custom_label?.trim() || undefined,
     stock: row.stock,
     popular: row.popular,
     source: "db",

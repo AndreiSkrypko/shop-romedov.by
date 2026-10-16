@@ -13,6 +13,8 @@ import {
   minQuantity,
   productImage,
   productIsOnOrder,
+  productPublicPriceLabel,
+  productShowsNumericPrice,
   useCatalogCategories,
   saleUnitLabel,
   stockStatusBadgeClass,
@@ -33,6 +35,8 @@ export function ProductCard({ product }: { product: Product }) {
   const ton = tonPrice(product);
   const canAdd = canAddProductToCart(product);
   const onOrder = productIsOnOrder(product);
+  const priceLabel = productPublicPriceLabel(product);
+  const showsNumeric = productShowsNumericPrice(product);
 
   const handleAdd = () => {
     add(product.slug, minQuantity(product));
@@ -99,7 +103,7 @@ export function ProductCard({ product }: { product: Product }) {
 
         <div className="mt-4 flex-1" />
 
-        {SHOW_PRICES ? (
+        {SHOW_PRICES && showsNumeric && canAdd ? (
           <div>
             <p className="font-display text-xl font-semibold">
               {formatPrice(unitPrice(product))}
@@ -114,7 +118,7 @@ export function ProductCard({ product }: { product: Product }) {
           </div>
         ) : (
           <p className="font-display text-sm font-semibold uppercase text-lime-deep">
-            Цена по запросу
+            {priceLabel ?? "Цена по запросу"}
           </p>
         )}
 

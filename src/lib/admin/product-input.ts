@@ -1,6 +1,8 @@
 import { z } from "zod";
 
-import type { SaleUnit, StockState } from "@/lib/catalog/types";
+import type { PriceDisplayMode, SaleUnit, StockState } from "@/lib/catalog/types";
+
+const priceDisplayModes = ["priced", "on_request", "custom"] as [PriceDisplayMode, ...PriceDisplayMode[]];
 
 const saleUnits = ["м", "лист", "шт", "карта", "боб"] as [SaleUnit, ...SaleUnit[]];
 const stockStates = ["in", "out", "order"] as [StockState, ...StockState[]];
@@ -97,6 +99,8 @@ export const adminProductSchema = z.object({
   pricePerUnit: optionalPositiveNumberField("Цена/ед."),
   pricePerMeter: optionalPositiveNumberField("Цена/метр"),
   metersPerSaleUnit: optionalPositiveNumberField("Метров в единице"),
+  priceDisplayMode: z.enum(priceDisplayModes).default("priced"),
+  priceCustomLabel: z.preprocess(emptyToUndefined, z.string().trim().max(120).optional()),
   stock: z.enum(stockStates).default("in"),
   popular: z.preprocess(
     (v) => v === true || v === "true" || v === "on",
@@ -131,12 +135,20 @@ export function parseAdminProductForm(data: FormData): AdminProductInput {
   }
 
   const product = parsed.data;
-  const hasPrice =
-    product.pricePerTon !== null ||
-    product.pricePerUnit !== null ||
-    product.pricePerMeter !== null;
-  if (!hasPrice) {
-    throw new Error("Укажите хотя бы одну цену: за тонну, за единицу или за метр");
+  if (product.priceDisplayMode === "custom" && !product.priceCustomLabel?.trim()) {
+    throw new Error("Укажите текст для витрины или выберите «По запросу»");
+  }
+
+  if (product.priceDisplayMode === "priced") {
+    const hasPrice =
+      product.pricePerTon !== null ||
+      product.pricePerUnit !== null ||
+      product.pricePerMeter !== null;
+    if (!hasPrice) {
+      throw new Error(
+        "Укажите хотя бы одну цену или выберите «По запросу» / свой текст вместо цены",
+      );
+    }
   }
 
   return product;
