@@ -14,6 +14,7 @@ import { CartProvider } from "@/lib/cart";
 import { CatalogCategoriesProvider } from "@/lib/catalog/catalog-context";
 import { listCategoriesAsync } from "@/lib/catalog/category-repository";
 import { fetchProductCountsByCategoryFromSupabase } from "@/lib/supabase/queries";
+import { GOOGLE_ADS_ID } from "@/lib/google-ads";
 import { SITE_NAME } from "@/lib/site";
 
 import appCss from "../styles.css?url";
@@ -123,6 +124,12 @@ function RootShell({ children }: { children: ReactNode }) {
   return (
     <html lang="ru">
       <head>
+        <script async src={`https://www.googletagmanager.com/gtag/js?id=${GOOGLE_ADS_ID}`} />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','${GOOGLE_ADS_ID}');`,
+          }}
+        />
         <HeadContent />
       </head>
       <body>
