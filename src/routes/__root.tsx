@@ -14,7 +14,11 @@ import { CartProvider } from "@/lib/cart";
 import { CatalogCategoriesProvider } from "@/lib/catalog/catalog-context";
 import { listCategoriesAsync } from "@/lib/catalog/category-repository";
 import { fetchProductCountsByCategoryFromSupabase } from "@/lib/supabase/queries";
-import { GOOGLE_ADS_ID } from "@/lib/google-ads";
+import {
+  GOOGLE_ADS_ID,
+  googleAdsGtagInlineScript,
+  trackGoogleAdsPhoneClick,
+} from "@/lib/google-ads";
 import { SITE_NAME } from "@/lib/site";
 
 import appCss from "../styles.css?url";
@@ -127,7 +131,7 @@ function RootShell({ children }: { children: ReactNode }) {
         <script async src={`https://www.googletagmanager.com/gtag/js?id=${GOOGLE_ADS_ID}`} />
         <script
           dangerouslySetInnerHTML={{
-            __html: `window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','${GOOGLE_ADS_ID}');`,
+            __html: googleAdsGtagInlineScript(),
           }}
         />
         <HeadContent />
@@ -149,6 +153,16 @@ function RootComponent() {
     if (typeof window === "undefined") return;
     void router.invalidate();
   }, [router]);
+
+  useEffect(() => {
+    const onClick = (event: MouseEvent) => {
+      const target = event.target;
+      if (!(target instanceof Element)) return;
+      if (target.closest('a[href^="tel:"]')) trackGoogleAdsPhoneClick();
+    };
+    document.addEventListener("click", onClick);
+    return () => document.removeEventListener("click", onClick);
+  }, []);
 
   return (
     <QueryClientProvider client={queryClient}>
